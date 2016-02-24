@@ -8,6 +8,10 @@ import javax.swing.JTextField;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+/**
+ * klasa panelu przycisków
+ * 
+*/
 public class ButtonPanel extends JPanel implements ActionListener{
 	 
 	 /**
