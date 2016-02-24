@@ -9,7 +9,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 /**
- * klasa panelu przycisków
+ * klasa panelu przycisków z słuchaczem zdarzeń
  * 
 */
 public class ButtonPanel extends JPanel implements ActionListener{
