@@ -15,8 +15,8 @@ public class MainFrame extends JFrame{
 		  super("Multi Tool");
 		  ImageIcon mainicon = new ImageIcon(getClass().getClassLoader().getResource("images/mainicon.png")); 
 		  ImageIcon graphicon = new ImageIcon(getClass().getClassLoader().getResource("images/graph.png"));
-		  ImageIcon anticon = new ImageIcon(getClass().getClassLoader().getResource("images/ant.png"));
-		  ImageIcon counticon = new ImageIcon(getClass().getClassLoader().getResource("images/count.png"));
+		 // ImageIcon anticon = new ImageIcon(getClass().getClassLoader().getResource("images/ant.png"));
+		//  ImageIcon counticon = new ImageIcon(getClass().getClassLoader().getResource("images/count.png"));
 		  
 		  setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		  setIconImage(mainicon.getImage());
@@ -24,8 +24,8 @@ public class MainFrame extends JFrame{
 		  setResizable(false);
 		  setVisible(true);
 		  MainGraphPanel graph = new MainGraphPanel();
-		  MainCount count = new MainCount();
-		  MainAnt ant = new MainAnt();
+		// MainCount count = new MainCount();
+		//  MainAnt ant = new MainAnt();
 		  
 		  
 		  JTabbedPane MainTabbedPanel = new JTabbedPane();
