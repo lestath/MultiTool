@@ -11,6 +11,9 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Stack;
 
+import MyUtils.CoorSys;
+import MyUtils.GraphPoints;
+import MyUtils.GraphsHolder;
 import MyUtils.Struct;
 
 import java.text.DecimalFormat;
@@ -46,7 +49,8 @@ class GraphPanel extends JPanel implements MouseMotionListener, MouseListener{
     private String SX;
     private String SY;
     private DecimalFormat dF;
-    private int system;
+    private CoorSys system;
+    private GraphsHolder graphs;
     
     private double LowIntegralLim;
     private double HighIntegralLim;
@@ -67,11 +71,14 @@ class GraphPanel extends JPanel implements MouseMotionListener, MouseListener{
     public PanelRight panelRight;  
     public ButtonPanel buttonPanel;
     
+    
 	
     public GraphPanel(){
+    	
 				addMouseMotionListener(this);
 				addMouseListener(this);
 				setVisible(true);
+				this.graphs = new GraphsHolder();
 				this.allowGraph=false;
 				this.allowCorSys=true;
 				this.allowIntegral=false;
@@ -92,11 +99,12 @@ class GraphPanel extends JPanel implements MouseMotionListener, MouseListener{
 				this.stack = new Stack<Struct>();
 				this.list=new ArrayList<Struct>();
 				this.onpList = new ArrayList<Struct>();
-				this.system = 0;
+				this.system = CoorSys.CARTESIAN;
 				/* koniec */
 				DecimalFormatSymbols otherSymbols = new DecimalFormatSymbols();
 				otherSymbols.setDecimalSeparator('.');
 				this.dF = new DecimalFormat("#.####",otherSymbols);
+				
 			}
 
    @Override
@@ -601,7 +609,8 @@ public void initGraph(Graphics2D g2d){
 		 
 /* Funkcja rysuje wykres */
 private void drawGraph(Graphics2D g2d){	
-			 
+			//TODO tu wstawić usunięcie grafów w razie przycisku usunięcia
+			 GraphPoints gp= new GraphPoints(this.pattern,CoorSys.CARTESIAN,new Color((int)(Math.random() * 0x1000000)));
 			 int prevX,prevY,nextX,nextY,tmpX,tmpY;
 			 double x , y,r, fi, counter;
 			 y = 0.0000;
@@ -615,7 +624,10 @@ private void drawGraph(Graphics2D g2d){
 				 delta = 0.001;
 				 panelRight.DELTA.setText("0.001");
 		        }
-         if(this.system == 0){
+	     //dodawanie wykresu
+	     this.graphs.getGraphlist().add(gp);
+         if(this.system.equals(CoorSys.CARTESIAN)){
+        	 
 			 counter= fullWidth/delta;  
 		 	 g2d.setColor(Color.RED);      
              x=-halfWidth;
@@ -637,16 +649,18 @@ private void drawGraph(Graphics2D g2d){
               	   prevX = nextX;
               	   prevY = nextY;
               	   }
-				  g2d.drawLine(prevX,
-							   prevY,
-							   nextX,
-							   nextY
-							   );
+                 //TODO tu się może coś zadziać  odnośnie rysowania wielu wykresów:)
+                 
+				 //TODO to do poprawy (nieoptymalne jak chuj)
+                 System.out.println("cos robi");
+				 gp.getPoints().add(new Point(prevX,prevY));
+				 gp.getPoints().add(new Point(nextX,nextY));
 				 prevX = tmpX;
 				 prevY=  tmpY; 
 				 x=x+delta;    
 		     }
         }else{
+           //TODO do zastanowienia jak ogarnąc zmianę na polarny
 		       try{
 				  Period = Double.parseDouble(panelRight.MAXFI.getText());
 				 }catch(Exception exc){
@@ -657,6 +671,7 @@ private void drawGraph(Graphics2D g2d){
 					Period = 12;
 					panelRight.MAXFI.setText("12");	
 		        }
+		    gp.setSystem(CoorSys.POLAR);
         	counter = (Period*Math.PI)/delta;
         	g2d.setColor(Color.ORANGE);
           	prevX = 0;
@@ -674,6 +689,7 @@ private void drawGraph(Graphics2D g2d){
 	              	prevX = nextX;
 	            	prevY = nextY;
 	              }
+	              //TODO wstawić też tu listy
 				  g2d.drawLine(prevX,
 							   prevY,
 							   nextX,
@@ -685,11 +701,32 @@ private void drawGraph(Graphics2D g2d){
         	  }
 
         }
+        this.drawAllGraphs(g2d); // naszkicowanie wszystkich grafów
+}
+
+public void drawAllGraphs(Graphics2D g2d){
+	System.out.println("rysuje");
+	ArrayList<Point> poin;
+	int index=0;
+	Color c;
+	for(GraphPoints points : this.graphs.getGraphlist()){
+		g2d.setColor(points.getColor());
+		poin = points.getPoints();
+		for(index = 0; index<poin.size()-1;index=index+2){
+			System.out.println("X : " + poin.get(index).getX());
+			g2d.drawLine(
+							(int)poin.get(index).getX(),
+							(int)poin.get(index).getY(),
+							(int)poin.get(index+1).getX(),
+							(int)poin.get(index+1).getY()
+						);
+		}
+	}
 }
 
 public void changeSystem(){
-	if(this.system == 1){
-	 this.system = 0;	
+	if(this.system.equals(CoorSys.POLAR)){
+	 this.system = CoorSys.CARTESIAN;	
 	 this.panelRight.SystemNameLabel.setText("Cartesian");
 	 this.buttonPanel.Label1.setText("f(x)=");
 	 this.panelRight.TLabel.setVisible(false);
@@ -702,7 +739,7 @@ public void changeSystem(){
 	 this.panelRight.xlabel.setText("X :");
 	 this.panelRight.ylabel.setText("Y :");
 	}else{
-	 this.system = 1;
+	 this.system = CoorSys.POLAR;
 	 this.panelRight.SystemNameLabel.setText("Polar");
 	 this.buttonPanel.Label1.setText("r  = ");
 	 this.panelRight.TLabel.setVisible(true);
@@ -747,7 +784,7 @@ public String calcIntegral(double l, double h){
 	      {
 		     double x = 0.00;
 			 /* pobranie i obróbka współrzędnych */ 
-			  if(system == 0){
+			  if(system.equals(CoorSys.CARTESIAN)){
 				 if(this.panelRight!= null){	  
 					 this.COORXPOS=e.getX();
 					 this.COORYPOS=e.getY();
