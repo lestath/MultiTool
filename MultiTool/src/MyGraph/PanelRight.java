@@ -85,7 +85,7 @@ public class PanelRight extends JPanel implements ActionListener{
 		 COORY = new JTextField("0.00");
 		 SCALEX = new JTextField("50");
 		 SCALEY = new JTextField("50");
-		 DELTA = new JTextField("0.001");
+		 DELTA = new JTextField("0.01");
 		 MAXFI = new JTextField("12");
 		 MAXFI.setVisible(false);
 		 

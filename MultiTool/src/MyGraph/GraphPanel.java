@@ -17,7 +17,7 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 
 /* Dozwolone konstrukcje i znaki */
-  // sin() cos() tan() ctg() sqr()
+  // sin() cos() tan() ctg() sqr() lgn()
   // x - zmienna
   // e - stała Eulera
   // p - stała PI
@@ -46,7 +46,7 @@ class GraphPanel extends JPanel implements MouseMotionListener, MouseListener{
     private String SX;
     private String SY;
     private DecimalFormat dF;
-    private int System;
+    private int system;
     
     private double LowIntegralLim;
     private double HighIntegralLim;
@@ -80,7 +80,7 @@ class GraphPanel extends JPanel implements MouseMotionListener, MouseListener{
 				this.excFlag = false;
 				this.scaleX=50;
 				this.scaleY=50;
-				this.delta =0.001;
+				this.delta =0.01;
 				this.COORXPOS = 0;
 				this.SX = null;
 				this.COORYPOS = 0;
@@ -92,7 +92,7 @@ class GraphPanel extends JPanel implements MouseMotionListener, MouseListener{
 				this.stack = new Stack<Struct>();
 				this.list=new ArrayList<Struct>();
 				this.onpList = new ArrayList<Struct>();
-				this.System = 0;
+				this.system = 0;
 				/* koniec */
 				DecimalFormatSymbols otherSymbols = new DecimalFormatSymbols();
 				otherSymbols.setDecimalSeparator('.');
@@ -162,7 +162,7 @@ class GraphPanel extends JPanel implements MouseMotionListener, MouseListener{
 		     }	 
 	     }
    }
-/* funkcja rysując układ współrzędnych */
+/* funkcja rysująca układ współrzędnych */
 	private void initCoordinateSysytem(Graphics2D g2d){
 			g2d.setColor(Color.BLACK);
 			g2d.drawLine(0,(this.getHeight()/2),this.fullWidth,(this.fullHeight/2));
@@ -229,7 +229,7 @@ private boolean checkAlphabet(String pattern){
 				   case 's': case 'i': case 'n':
 				   case 'c': case 'o': case 't':
 				   case 'g': case 'a': case 'q':
-				   case 'r' :
+				   case 'r' : case 'l':
 				   
 				   break;
 				   default: 
@@ -284,7 +284,7 @@ private boolean isOper(char x){
 /* sprawdza czy podany znak jest funkcją*/
 private boolean isFOper(char x){
 	 switch(x){
-		  case 's': case 'c': case 't': case 'q': case 'r':
+		  case 's': case 'c': case 't': case 'q': case 'r': case  'l':
 		   return true;
 		 }
 	  return false;
@@ -345,7 +345,7 @@ private int getPriority(char c){
             return 2;
         case '^': 
             return 3;
-        case 's': case 'c': case 't': case 'q': case  'r' :
+        case 's': case 'c': case 't': case 'q': case  'r' : case 'l':
 			return 4;
       	}
     return 0;
@@ -371,6 +371,9 @@ private char getFunc(){
 			  }
 		 case 't':
 		  return 't';
+		 case 'l':
+			 System.out.println("zwracam l");
+		  return 'l'; // logarytm naturalny
 	  }
 	 return '#';
 	}
@@ -414,36 +417,42 @@ private double getResult(double x){
 				v1.n = v2.n / v1.n;
 				this.stack.push(new Struct('#',v1.n));
 			   break;
-			  case '^': 
+			  case '^': //potęga
 				v1 = this.stack.pop();
 				v2 = this.stack.pop();
 				v1.n = Math.pow(v2.n ,v1.n);
 				this.stack.push(new Struct('#',v1.n));
 			   break;
-			  case 's': 
+			  case 's': //sinus
 				v1 = this.stack.pop();
 				v1.n = Math.sin(v1.n);
 				this.stack.push(new Struct('#',v1.n));
 			   break;
-			  case 'c': 
+			  case 'c': // cosinus
 				v1 = this.stack.pop();
 				v1.n = Math.cos(v1.n);
 				this.stack.push(new Struct('#',v1.n));
 			   break;
-			  case 't': 
+			  case 't': // tangens
 				v1 = this.stack.pop();
 				v1.n = Math.tan(v1.n);
 				this.stack.push(new Struct('#',v1.n));
 			   break;
-			  case 'q': 
+			  case 'q': //cotangens
 				v1 = this.stack.pop();
 				v1.n =1.00/Math.tan(v1.n);
 				this.stack.push(new Struct('#',v1.n));
 			   break;
-			  case 'r': 
+			  case 'r': //pierwiastek
 				v1 = this.stack.pop();
 				v1.n =Math.sqrt(v1.n);
 				this.stack.push(new Struct('#',v1.n));
+			   break;
+			  case 'l': //logarytm naturalny
+					v1 = this.stack.pop();
+					v1.n =Math.log(v1.n);
+					this.stack.push(new Struct('#',v1.n));
+					System.out.println("Sterowniki załadowane");
 			   break;
 			  case '=': 
 				v1 = this.stack.pop();
@@ -563,7 +572,7 @@ public void initGraph(Graphics2D g2d){
 						try{
 						 drawIntegral(g2d);
 						}catch(Exception x){
-							
+							//TODO tu musze obsłużyć wyjątek :)
 						}
 					}
 					try{
@@ -577,11 +586,10 @@ public void initGraph(Graphics2D g2d){
 					    g2d.setColor(Color.RED);
 						g2d.drawString("Błąd",30,10);
 						g2d.drawString("Program nie był w stanie",30,30);			// tu jestemmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm
-						g2d.drawString("wygenerować wykresu",30,50);
-							
+						g2d.drawString("wygenerować wykresu",30,50);				
 					 }
 				}
-			}else{
+			}else{ 
 				 this.allowCorSys = false;
 				 g2d.setColor(Color.RED);
 				 g2d.drawString("Wprowadzono niedozwolone znaki",1,10);
@@ -607,7 +615,7 @@ private void drawGraph(Graphics2D g2d){
 				 delta = 0.001;
 				 panelRight.DELTA.setText("0.001");
 		        }
-         if(this.System == 0){
+         if(this.system == 0){
 			 counter= fullWidth/delta;  
 		 	 g2d.setColor(Color.RED);      
              x=-halfWidth;
@@ -680,8 +688,8 @@ private void drawGraph(Graphics2D g2d){
 }
 
 public void changeSystem(){
-	if(this.System == 1){
-	 this.System = 0;	
+	if(this.system == 1){
+	 this.system = 0;	
 	 this.panelRight.SystemNameLabel.setText("Cartesian");
 	 this.buttonPanel.Label1.setText("f(x)=");
 	 this.panelRight.TLabel.setVisible(false);
@@ -694,7 +702,7 @@ public void changeSystem(){
 	 this.panelRight.xlabel.setText("X :");
 	 this.panelRight.ylabel.setText("Y :");
 	}else{
-	 this.System = 1;
+	 this.system = 1;
 	 this.panelRight.SystemNameLabel.setText("Polar");
 	 this.buttonPanel.Label1.setText("r  = ");
 	 this.panelRight.TLabel.setVisible(true);
@@ -739,7 +747,7 @@ public String calcIntegral(double l, double h){
 	      {
 		     double x = 0.00;
 			 /* pobranie i obróbka współrzędnych */ 
-			  if(System == 0){
+			  if(system == 0){
 				 if(this.panelRight!= null){	  
 					 this.COORXPOS=e.getX();
 					 this.COORYPOS=e.getY();
