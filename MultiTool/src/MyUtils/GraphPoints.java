@@ -59,5 +59,9 @@ public class GraphPoints{
 	public void setColor(Color color) {
 		this.color = color;
 	}
+
+	public void clearAll() {
+		this.points.clear();
+	}
 	
 }

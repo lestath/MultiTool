@@ -2,6 +2,8 @@ package MyUtils;
 
 import java.util.ArrayList;
 
+import javax.swing.JComboBox;
+
 /**
  * 
  * Klasa przetrzymująca zestawy wykresów w postaci list punktów
@@ -20,5 +22,12 @@ public class GraphsHolder {
 
 	public void setGraphlist(ArrayList<GraphPoints> graphlist) {
 		this.graphlist = graphlist;
+	}
+	
+	public void clearAll(){
+		for(GraphPoints p:graphlist){
+			p.clearAll();
+		}
+		this.graphlist.clear();
 	}
 }

@@ -16,7 +16,7 @@ public class PanelRight extends JPanel {
 	 public PanelRight(){
 		//inicjalizacja ustawień panelu
 		this.setLayout(new FlowLayout(FlowLayout.LEADING));
-		this.setPreferredSize(new Dimension(150,500));
+		this.setPreferredSize(new Dimension(120,500));
 		
 		Dimension buttonsize = new Dimension(140,24);
 		

@@ -20,7 +20,7 @@ public class MainFrame extends JFrame{
 		  
 		  setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		  setIconImage(mainicon.getImage());
-		  setSize(780,650);
+		  setSize(830,750);
 		  setResizable(false);
 		  setVisible(true);
 		  MainGraphPanel graph = new MainGraphPanel();

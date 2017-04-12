@@ -2,6 +2,7 @@ package MyGraph;
 
 import java.awt.*;
 
+import javax.swing.JComboBox;
 import javax.swing.JPanel;
 
 import java.lang.Math;
@@ -20,7 +21,7 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 
 /* Dozwolone konstrukcje i znaki */
-  // sin() cos() tan() ctg() sqr() lgn()
+  // sin() cos() tan() ctg() sqr() lgn() abs()
   // x - zmienna
   // e - stała Eulera
   // p - stała PI
@@ -35,6 +36,10 @@ class GraphPanel extends JPanel implements MouseMotionListener, MouseListener{
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+	
+	/* Lista rozwijalna wykresów*/
+	private JComboBox<String> t2;
+	
 	private int fullWidth;
     private int fullHeight;
     private int halfWidth;
@@ -73,8 +78,12 @@ class GraphPanel extends JPanel implements MouseMotionListener, MouseListener{
     
     
 	
+    
     public GraphPanel(){
-    	
+    			this.setLayout(new FlowLayout(FlowLayout.LEFT));
+    			t2 = new JComboBox<String>();
+    			this.add(t2);
+    			
 				addMouseMotionListener(this);
 				addMouseListener(this);
 				setVisible(true);
@@ -129,13 +138,17 @@ class GraphPanel extends JPanel implements MouseMotionListener, MouseListener{
    
 /* funkcja rysuje całkę */
    public void drawIntegral(Graphics2D g2d){
+	   	 GraphPoints gp = this.getSelectedGraph();
+	   	 this.insertPattern(gp.getPattern());
+	   	 this.toList();
+	   	 this.toOnpList();
 	     double l=LowIntegralLim;
 	     double h=HighIntegralLim;
 	     double x,y;
 	     int height;
 	     int xx,yy;
 	     height= this.getHeight()/2;
-	     g2d.setColor(Color.GREEN);
+	     g2d.setColor(gp.getColor());
 	     if(l<=h){
 			 while(l<=h){
 				  x=l;
@@ -215,9 +228,7 @@ class GraphPanel extends JPanel implements MouseMotionListener, MouseListener{
 
 /* ustawienie zmiennej prywatnej wzoru */
  public void insertPattern(String pattern){
-	    
 	    this.pattern=new String(pattern);
-	    
 }
 	   
 
@@ -237,7 +248,8 @@ private boolean checkAlphabet(String pattern){
 				   case 's': case 'i': case 'n':
 				   case 'c': case 'o': case 't':
 				   case 'g': case 'a': case 'q':
-				   case 'r' : case 'l':
+				   case 'r': case 'l': case 'b':
+					   
 				   
 				   break;
 				   default: 
@@ -292,7 +304,7 @@ private boolean isOper(char x){
 /* sprawdza czy podany znak jest funkcją*/
 private boolean isFOper(char x){
 	 switch(x){
-		  case 's': case 'c': case 't': case 'q': case 'r': case  'l':
+		  case 's': case 'c': case 't': case 'q': case 'r': case  'l': case 'a':
 		   return true;
 		 }
 	  return false;
@@ -353,7 +365,7 @@ private int getPriority(char c){
             return 2;
         case '^': 
             return 3;
-        case 's': case 'c': case 't': case 'q': case  'r' : case 'l':
+        case 's': case 'c': case 't': case 'q': case  'r' : case 'l': case 'a':
 			return 4;
       	}
     return 0;
@@ -380,8 +392,10 @@ private char getFunc(){
 		 case 't':
 		  return 't';
 		 case 'l':
-			 System.out.println("zwracam l");
 		  return 'l'; // logarytm naturalny
+		 case 'a':
+		  return 'a';
+			 
 	  }
 	 return '#';
 	}
@@ -460,7 +474,11 @@ private double getResult(double x){
 					v1 = this.stack.pop();
 					v1.n =Math.log(v1.n);
 					this.stack.push(new Struct('#',v1.n));
-					System.out.println("Sterowniki załadowane");
+			   break;
+			  case 'a': //wartosc absolutna
+					v1 = this.stack.pop();
+					v1.n =Math.abs(v1.n);
+					this.stack.push(new Struct('#',v1.n));
 			   break;
 			  case '=': 
 				v1 = this.stack.pop();
@@ -473,6 +491,7 @@ private double getResult(double x){
  
 /* ładuje łańcuch znaków do listy wzoru operuje na polach prywatnych iterator , list oraz uzywa pola pattern */	
 private void toList(){
+		   this.list.clear();
 		   this.iterator = 0;
 		   char[] str = this.pattern.toCharArray();
 		   int len = str.length;
@@ -526,6 +545,7 @@ private void toList(){
     
 /* przekształca listę z wyrażeniem w zwykłej postaci na listę w postaci onp */
 private void toOnpList(){
+		this.onpList.clear();
 	   /* kod przekształcający */
 	   int i;
 	   Struct st;
@@ -570,6 +590,7 @@ private void clearAbstractElements(){
 
 /* sprawdzenie poprawności grafu do narysowania */   
 public void initGraph(Graphics2D g2d){
+	      if(!t2.isVisible()){this.t2.setVisible(true);this.allowGraph = true;}
 		  if(this.pattern!=null && this.pattern.length()!=0){
 			if(parsePattern()){
 				if(this.allowGraph){
@@ -587,29 +608,35 @@ public void initGraph(Graphics2D g2d){
 						this.allowIntegral = false;
 						this.drawGraph(g2d);
 						g2d.setColor(Color.BLACK);
-						g2d.drawString(this.pattern,1,10);
+					//	g2d.drawString(this.pattern,1,10);
 					 }catch(Exception exc){
 						this.excFlag = true;
 						this.allowCorSys = false;				  
 					    g2d.setColor(Color.RED);
-						g2d.drawString("Błąd",30,10);
-						g2d.drawString("Program nie był w stanie",30,30);			// tu jestemmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm
-						g2d.drawString("wygenerować wykresu",30,50);				
+						g2d.drawString("Błąd",30,110);
+						g2d.drawString("Program nie był w stanie",30,130);			// tu jestemmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm
+						g2d.drawString("wygenerować wykresu",30,150);		
+						this.t2.setVisible(false);
 					 }
 				}
 			}else{ 
 				 this.allowCorSys = false;
 				 g2d.setColor(Color.RED);
-				 g2d.drawString("Wprowadzono niedozwolone znaki",1,10);
-				 g2d.drawString("lub nieprawidłowa konstrukcja",1,30);
-				 g2d.drawString("wyrażenia! ",1,50);
+				 g2d.drawString("Wprowadzono niedozwolone znaki",1,110);
+				 g2d.drawString("lub nieprawidłowa konstrukcja",1,130);
+				 g2d.drawString("wyrażenia! ",1,150);
+				 this.t2.setVisible(false);
 		  }
 	   }
 }
 		 
 /* Funkcja rysuje wykres */
 private void drawGraph(Graphics2D g2d){	
-			//TODO tu wstawić usunięcie grafów w razie przycisku usunięcia
+			 if(this.isPatternOnList()){
+				 System.out.println("graf na liście");
+				 this.drawAllGraphs(g2d);
+				 return;
+			 }
 			 GraphPoints gp= new GraphPoints(this.pattern,CoorSys.CARTESIAN,new Color((int)(Math.random() * 0x1000000)));
 			 int prevX,prevY,nextX,nextY,tmpX,tmpY;
 			 double x , y,r, fi, counter;
@@ -626,6 +653,8 @@ private void drawGraph(Graphics2D g2d){
 		        }
 	     //dodawanie wykresu
 	     this.graphs.getGraphlist().add(gp);
+	     this.t2.addItem(gp.getPattern());
+	     this.t2.setSelectedItem(gp.getPattern());
          if(this.system.equals(CoorSys.CARTESIAN)){
         	 
 			 counter= fullWidth/delta;  
@@ -650,10 +679,6 @@ private void drawGraph(Graphics2D g2d){
               	   prevY = nextY;
               	   }
                  //TODO tu się może coś zadziać  odnośnie rysowania wielu wykresów:)
-                 
-				 //TODO to do poprawy (nieoptymalne jak chuj)
-                 System.out.println("cos robi");
-				 gp.getPoints().add(new Point(prevX,prevY));
 				 gp.getPoints().add(new Point(nextX,nextY));
 				 prevX = tmpX;
 				 prevY=  tmpY; 
@@ -708,12 +733,10 @@ public void drawAllGraphs(Graphics2D g2d){
 	System.out.println("rysuje");
 	ArrayList<Point> poin;
 	int index=0;
-	Color c;
 	for(GraphPoints points : this.graphs.getGraphlist()){
 		g2d.setColor(points.getColor());
 		poin = points.getPoints();
 		for(index = 0; index<poin.size()-1;index=index+2){
-			System.out.println("X : " + poin.get(index).getX());
 			g2d.drawLine(
 							(int)poin.get(index).getX(),
 							(int)poin.get(index).getY(),
@@ -722,6 +745,11 @@ public void drawAllGraphs(Graphics2D g2d){
 						);
 		}
 	}
+}
+
+public void clearAll(){
+	this.graphs.clearAll();
+	this.t2.removeAllItems();
 }
 
 public void changeSystem(){
@@ -822,6 +850,33 @@ public String calcIntegral(double l, double h){
 				}  
 			  }
 		  }
+/**
+ * Metoda sprawdza czy wzór funkcji jest na liście
+ * @return
+ * 		Zwraca true jeżeli tak
+ */
+private boolean isPatternOnList(){
+	for(GraphPoints g: graphs.getGraphlist()){
+		if(g.getPattern().equals(this.pattern)){
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
+ * 
+ * @return
+ * 		Zwraca graf zaznaczony w polu wyboru
+ */
+private GraphPoints getSelectedGraph(){
+	for(GraphPoints gp : this.graphs.getGraphlist()){
+		if(gp.getPattern().equals(this.t2.getSelectedItem())){
+			return gp;
+		}
+	}
+	return null;
+}
 	    
 	  @Override
 	  public void mouseDragged(MouseEvent e){
