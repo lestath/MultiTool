@@ -10,12 +10,14 @@ import javax.swing.JTextField;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 
 /**
  * klasa panelu przycisków z słuchaczem zdarzeń
  * 
 */
-public class ButtonPanel extends JPanel implements ActionListener{
+public class ButtonPanel extends JPanel implements ActionListener,KeyListener{
 	 
 	 /**
 	 * 
@@ -48,6 +50,7 @@ public class ButtonPanel extends JPanel implements ActionListener{
 			  b3.setFocusPainted(false);
 			  t1 = new JTextField();
 			  t1.setPreferredSize(new Dimension(200,24));
+			  t1.addKeyListener(this);
 			  
 			  add(this.Label1);
 			  add(t1);
@@ -82,6 +85,30 @@ public class ButtonPanel extends JPanel implements ActionListener{
     public void addGraph(GraphPanel g){
 		 this.g=g;
 		}
+	@Override
+	public void keyTyped(KeyEvent e) {
+		// TODO Auto-generated method stub
+		
 	}
+	@Override
+	public void keyPressed(KeyEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void keyReleased(KeyEvent e) {
+		    int key = e.getKeyCode();
+		    if(e.getSource()==this.t1)
+		    {
+		        if(key==KeyEvent.VK_ENTER)
+		        {     
+					g.allowGraph = true;		 
+					g.insertPattern(this.t1.getText());
+					g.repaint();	
+		        }
+		    }
+	}
+	
+}
 
  

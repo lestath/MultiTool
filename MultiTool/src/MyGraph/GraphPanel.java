@@ -2,8 +2,7 @@ package MyGraph;
 
 import java.awt.*;
 
-import javax.swing.JComboBox;
-import javax.swing.JPanel;
+import javax.swing.*;
 
 import java.lang.Math;
 import java.awt.event.MouseMotionListener;
@@ -15,7 +14,7 @@ import java.util.Stack;
 import MyUtils.CoorSys;
 import MyUtils.GraphPoints;
 import MyUtils.GraphsHolder;
-import MyUtils.Struct;
+import MyUtils.*;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -31,14 +30,11 @@ import java.text.DecimalFormatSymbols;
 /* koniec */
 
 class GraphPanel extends JPanel implements MouseMotionListener, MouseListener{
-    
-    /**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	
 	/* Lista rozwijalna wykresów*/
 	private JComboBox<String> t2;
+	private ComboBoxRenderer renderer;
 	
 	private int fullWidth;
     private int fullHeight;
@@ -82,6 +78,7 @@ class GraphPanel extends JPanel implements MouseMotionListener, MouseListener{
     public GraphPanel(){
     			this.setLayout(new FlowLayout(FlowLayout.LEFT));
     			t2 = new JComboBox<String>();
+    			this.renderer = new ComboBoxRenderer(t2);
     			this.add(t2);
     			
 				addMouseMotionListener(this);
@@ -136,7 +133,12 @@ class GraphPanel extends JPanel implements MouseMotionListener, MouseListener{
 		}
 	}
    
-/* funkcja rysuje całkę */
+
+   /**
+    * Funkcja rysuje całkę
+    * @param g2d
+    * 			referencja na komponent graficzny
+    */
    public void drawIntegral(Graphics2D g2d){
 	   	 GraphPoints gp = this.getSelectedGraph();
 	     double l=LowIntegralLim;
@@ -180,7 +182,12 @@ class GraphPanel extends JPanel implements MouseMotionListener, MouseListener{
 		     }	 
 	     }
    }
-/* funkcja rysująca układ współrzędnych */
+
+    /**
+     * Funkcja rysująca układ współrzędnych
+     * @param g2d
+     * 			referencja na komponent graficzny
+     */
 	private void initCoordinateSysytem(Graphics2D g2d){
 			g2d.setColor(Color.BLACK);
 			g2d.drawLine(0,(this.getHeight()/2),this.fullWidth,(this.fullHeight/2));
@@ -223,13 +230,24 @@ class GraphPanel extends JPanel implements MouseMotionListener, MouseListener{
            counter = fullHeight/scaleY;        
 	}
 
-/* ustawienie zmiennej prywatnej wzoru */
+ /**
+  * Ustawienie zmiennej prywatnej wzoru
+  * @param pattern
+  * 			wzór funkcji
+  **/
  public void insertPattern(String pattern){
 	    this.pattern=new String(pattern);
-}
+ }
 	   
 
-/* Funkcja sprawdzająca poprawność wprowadzonych znaków*/
+
+ /**
+  * Funkcja sprawdzająca poprawność wprowadzonych znaków we wzorze funkcji
+  * @param pattern
+  * 		wzór funkcji
+  * @return
+  * 		zwraca true jeżeli wzór zawiera poprawne znaki
+  */
 private boolean checkAlphabet(String pattern){
 		  char[] txt = pattern.toCharArray(); 
 		  for(char c : txt){
@@ -256,7 +274,12 @@ private boolean checkAlphabet(String pattern){
 		  return true;
 }
 
-/* Funkcja sprawdzająca poprawność konstrukcji całości wzoru */
+
+/**
+ * Funkcja sprawdzająca poprawność konstrukcji całości wzoru 
+ * @return
+ * 		Zwraca true jeżeli wzór poprawnie zwalidowany
+ */
 private boolean parsePattern(){
 	 if (!checkAlphabet(this.pattern)){
 		  return false;
@@ -266,7 +289,13 @@ private boolean parsePattern(){
 
 /* funkcje parsujące */
 
-
+/**
+ * Metoda wyciąga liczby ze wzoru
+ * @param pattern
+ * 			wzór funkcji
+ * @return
+ * 			zwraca liczbę zmiennoprzecinkową, która wystapiła we wzorze
+ */
 private double getDouble(String pattern){
 			char[] str = pattern.toCharArray();
 			String doub = "";
@@ -289,7 +318,14 @@ private double getDouble(String pattern){
 			return result;
 }
 
-/* sprawdza czy podany znak jest operatorem */
+
+/**
+ * Sprawdza czy podany znak jest operatorem matematycznym
+ * @param x
+ * 		znak do sprawdzenia
+ * @return
+ *      zwraca true jeżeli znak jest operatoprem
+ */
 private boolean isOper(char x){
 	 switch(x){
 		  case '+': case '-': case '*': case '/': case '^': case '(': case ')':
@@ -298,7 +334,13 @@ private boolean isOper(char x){
 	  return false;
 	}
 	
-/* sprawdza czy podany znak jest funkcją*/
+/**
+ * Sprawdza czy podany znak jest operatorem funkcyjnym
+ * @param x
+ * 		znak do sprawdzenia
+ * @return
+ *      zwraca true jeżeli znak jest operatorem funkcyjnym
+ */
 private boolean isFOper(char x){
 	 switch(x){
 		  case 's': case 'c': case 't': case 'q': case 'r': case  'l': case 'a':
@@ -307,7 +349,14 @@ private boolean isFOper(char x){
 	  return false;
 	}	
 	
-/* sprawdza czy podany znak jest cyfrą */
+
+/**
+ * Sprawdza czy podany znak jest cyfrą
+ * @param x
+ * 		znak do sprawdzenia
+ * @return
+ *      zwraca true jeżeli znak jest cyfrą
+ */
 private boolean isNum(char x){
 	 switch(x){
 		  case '0': case '1': case '2': case '3': case '4': 
@@ -318,7 +367,14 @@ private boolean isNum(char x){
 	}
 	
 	
-/* sprawdza czy podany znak jest zmienną */
+
+/**
+ * Sprawdza czy podany znak jest zmienną
+ * @param x
+ * 		znak do sprawdzenia
+ * @return
+ *      zwraca true jeżeli znak jest zmienną
+ */
 private boolean isVar(char x){
   switch(x){
 		  case 'x':
@@ -329,7 +385,14 @@ private boolean isVar(char x){
 	
 	
 
-/* sprawdza czy znak jest funkcją */
+
+/**
+ * Sprawdza czy znak jest stałą
+ * @param x
+ * 		znak do sprawdzenia
+ * @return
+ *      zwraca true jeżeli znak jest stałą
+ */
 private boolean isConst(char x){
 	switch(x){
 		  case 'p': case 'e': 
@@ -339,7 +402,14 @@ private boolean isConst(char x){
 	}
 	
 	
-/* wydaje stałą na podstawie znaku */
+
+/**
+ * Wydaje stałą na podstawie znaku
+ * @param x
+ * 		stała do zwrócenia
+ * @return
+ * 		zwraca liczbę kóra jest reprezentowana przez stałą
+ */
 private double getConst(char x){
 	switch(x){
 		  case 'p':
@@ -351,7 +421,14 @@ private double getConst(char x){
 }
 
 
-/* zwraca priorytet operatora */
+
+/**
+ * Zwraca priorytet operatora
+ * @param c
+ * 		znak do sprawdzenia
+ * @return
+ *      zwraca liczbowy priorytet operatora
+ */
 private int getPriority(char c){
 	switch(c){
 		case '(' :
@@ -368,7 +445,12 @@ private int getPriority(char c){
     return 0;
 }
 
-/* zwraca znak funkcji operatora korzysta z głownego iteratora i wzoru*/
+
+/**
+ * Pobranie funkcji
+ * @return
+ * 		zwraca znak funkcji operatora korzysta z głownego iteratora i wzoru
+ */
 private char getFunc(){
 	 char[] arr =  this.pattern.toCharArray();
 	 int i = this.iterator;
@@ -398,8 +480,13 @@ private char getFunc(){
 	}
 
 
-/* zwraca wynik działania */
 
+/**
+ * Zwraca wynik działania
+ * @param x
+ * 
+ * @return
+ */
 private double getResult(double x){
 	 Struct st,v1,v2;
 	 int i,size;
@@ -627,7 +714,11 @@ public void initGraph(Graphics2D g2d){
 	   }
 }
 		 
-/* Funkcja rysuje wykres */
+/**
+ * Metoda generująca wykres w zalezności od warunków wejściowych
+ * @param g2d
+ * 				referencja na komponent graficzny
+ */
 private void drawGraph(Graphics2D g2d){
 			if(!this.isPatternOnList()){
 			 this.generatePoints(g2d);
@@ -635,12 +726,19 @@ private void drawGraph(Graphics2D g2d){
 			this.drawAllGraphs(g2d);
 }
 
+/**
+ * Metoda generująca listy punktów dla wzorów. wykresy są natępnie trzymane w Instancji klasy GraphsHolder
+ * @param g2d
+ * 			referencja na komponent graficzny
+ */
+
 private void generatePoints(Graphics2D g2d ){
 	GraphPoints gp;
 	gp=new GraphPoints(this.pattern,CoorSys.CARTESIAN,new Color((int)(Math.random() * 0x1000000)));
 	this.t2.addItem(gp.getPattern());
 	this.t2.setSelectedItem(gp.getPattern());
 	this.graphs.getGraphlist().add(gp);
+
 	int prevX,prevY,nextX,nextY,tmpX,tmpY;
 	double x , y,r, fi, counter;
 	y = 0.0000;
@@ -718,11 +816,32 @@ private void generatePoints(Graphics2D g2d ){
 	  }
 }
 
+/**
+ * Metoda rysuje grafy na komponencie graficznym na podstawie punktów z list grafów
+ * @param g2d
+ * 			referencja na komponent graficzny
+ */
 public void drawAllGraphs(Graphics2D g2d){
 	System.out.println("rysuje");
 	ArrayList<Point> poin;
 	int index=0;
-	
+	int graphssize = this.graphs.getGraphlist().size()+1;
+	String[] s = new String[graphssize];
+	Color[] c = new Color[graphssize];
+	for(GraphPoints points : this.graphs.getGraphlist()){
+		s[index] = points.getPattern();
+		c[index] = points.getColor();
+	    index = index + 1;
+	}
+	if(index!=0){
+		this.renderer.setStrings(s);
+		this.renderer.setColors(c);
+		this.t2.setRenderer(this.renderer);
+	}else{
+		this.t2.setRenderer(null);
+	}
+	index=0;
+	//modyfikacja kolorów listy rozwijalnej
 	if(this.system.equals(CoorSys.CARTESIAN)){
 		for(GraphPoints points : this.graphs.getGraphlist()){
 			g2d.setColor(points.getColor());
@@ -741,7 +860,7 @@ public void drawAllGraphs(Graphics2D g2d){
 			g2d.setColor(points.getColor());
 			poin = points.getPolarpoints();
 			//TODO pomijanie równań niwygodnych dla systemu biegunowego 
-			if(this.skipEquation(points)){return;}
+			if(this.skipEquation(points)){continue;}
 			for(index = 0; index<poin.size()-1;index=index+2){
 				g2d.drawLine(
 								(int)poin.get(index).getX(),
@@ -766,7 +885,7 @@ private boolean skipEquation(GraphPoints p) {
 	String [] search = {"e^x","e^(x"};  // czarna lista 
     int index = 0;;
     for(String s: search){
-    	index = this.pattern.indexOf(s);
+    	index = p.getPattern().indexOf(s);
     	if(index != -1){
         	return true;
     	}
@@ -777,6 +896,7 @@ private boolean skipEquation(GraphPoints p) {
 public void clearAll(){
 	this.graphs.clearAll();
 	this.t2.removeAllItems();
+	this.renderer = new ComboBoxRenderer(t2);
 }
 
 public void changeSystem(){
@@ -809,7 +929,16 @@ public void changeSystem(){
 	 this.panelRight.ylabel.setText(str+" :");
 	}	
 }
-     
+
+/**
+ * Metoda obliczająca całkę numeryczną metodą prostokątów z nadmiarem
+ * @param l
+ * 			dolna granica całkowania
+ * @param h
+ * 			górna granica całkowania
+ * @return
+ * 			zwraca wynik w postaci łańcucha znaków
+ */
 public String calcIntegral(double l, double h){
 	double x, delta;
 	double result = 0.000;      
@@ -920,7 +1049,7 @@ private GraphPoints getSelectedGraph(){
 			 this.panelRight.COORX.setText("0.00");
 			 this.panelRight.COORY.setText("0.00");
 		    }
-		  }
+	  }
 	//metoda wywoływana, gdy następuje kliknięcie, czyli wciśnięcie i zwolnienie przycisku myszy, ale uwaga, obie te operacje muszą zajść w jednym położeniu.
 	@Override
 	public void mouseClicked(MouseEvent event){}
