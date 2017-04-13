@@ -11,12 +11,14 @@ import java.util.ArrayList;
  */
 public class GraphPoints{
 	private ArrayList<Point> points;
+	private ArrayList<Point> polarpoints;
 	private String pattern;
 	private CoorSys system;
 	private Color color;
 	
 	public GraphPoints(String pat,CoorSys system,Color c){
 		this.points = new ArrayList<Point>();
+		this.polarpoints = new ArrayList<Point>();
 		this.pattern = pat;
 		this.system = system;
 		this.color = c;
@@ -62,6 +64,15 @@ public class GraphPoints{
 
 	public void clearAll() {
 		this.points.clear();
+		this.polarpoints.clear();
+	}
+
+	public ArrayList<Point> getPolarpoints() {
+		return polarpoints;
+	}
+
+	public void setPolarpoints(ArrayList<Point> polarpoints) {
+		this.polarpoints = polarpoints;
 	}
 	
 }

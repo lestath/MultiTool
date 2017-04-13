@@ -139,9 +139,6 @@ class GraphPanel extends JPanel implements MouseMotionListener, MouseListener{
 /* funkcja rysuje całkę */
    public void drawIntegral(Graphics2D g2d){
 	   	 GraphPoints gp = this.getSelectedGraph();
-	   	 this.insertPattern(gp.getPattern());
-	   	 this.toList();
-	   	 this.toOnpList();
 	     double l=LowIntegralLim;
 	     double h=HighIntegralLim;
 	     double x,y;
@@ -631,120 +628,150 @@ public void initGraph(Graphics2D g2d){
 }
 		 
 /* Funkcja rysuje wykres */
-private void drawGraph(Graphics2D g2d){	
-			 if(this.isPatternOnList()){
-				 System.out.println("graf na liście");
-				 this.drawAllGraphs(g2d);
-				 return;
-			 }
-			 GraphPoints gp= new GraphPoints(this.pattern,CoorSys.CARTESIAN,new Color((int)(Math.random() * 0x1000000)));
-			 int prevX,prevY,nextX,nextY,tmpX,tmpY;
-			 double x , y,r, fi, counter;
-			 y = 0.0000;
-			 try{
-			  delta = Double.parseDouble(panelRight.DELTA.getText());
-			 }catch(Exception exc){
-			  delta = 0.001;
-			  panelRight.DELTA.setText("0.001");
-			 }
-		       if((delta>0.8)||(delta<0.0001)){
-				 delta = 0.001;
-				 panelRight.DELTA.setText("0.001");
-		        }
-	     //dodawanie wykresu
-	     this.graphs.getGraphlist().add(gp);
-	     this.t2.addItem(gp.getPattern());
-	     this.t2.setSelectedItem(gp.getPattern());
-         if(this.system.equals(CoorSys.CARTESIAN)){
-        	 
-			 counter= fullWidth/delta;  
-		 	 g2d.setColor(Color.RED);      
-             x=-halfWidth;
-             prevX = -2;
-             prevY = -2;		
-			 for(int i = 0 ; i<=counter ; i++){
-                  y=getResult(x);
-                  y =halfHeight-(y*scaleY);
-                  nextY = (int) Math.round(y);
-                  y = halfWidth +(x*scaleX);
-                  nextX =(int) Math.round(y);  
-           	      tmpX = nextX;
-           	      tmpY = nextY;
-                 if((prevY > nextY)&&((prevY-nextY)>200)){
-                	   nextX = prevX;
-                	   nextY = prevY;
-                	   }
-                 if((prevY < nextY)&&((nextY-prevY)>200)){
-              	   prevX = nextX;
-              	   prevY = nextY;
-              	   }
-                 //TODO tu się może coś zadziać  odnośnie rysowania wielu wykresów:)
-				 gp.getPoints().add(new Point(nextX,nextY));
-				 prevX = tmpX;
-				 prevY=  tmpY; 
-				 x=x+delta;    
-		     }
-        }else{
-           //TODO do zastanowienia jak ogarnąc zmianę na polarny
-		       try{
-				  Period = Double.parseDouble(panelRight.MAXFI.getText());
-				 }catch(Exception exc){
-				  Period = 12;
-				  panelRight.MAXFI.setText("12");
-				}
-		        if((Period>100)||(Period<0)){
-					Period = 12;
-					panelRight.MAXFI.setText("12");	
-		        }
-		    gp.setSystem(CoorSys.POLAR);
-        	counter = (Period*Math.PI)/delta;
-        	g2d.setColor(Color.ORANGE);
-          	prevX = 0;
-        	prevY = 0;
-        	fi = delta;	
-	          for(int i=0;i<=counter;i++){
-	              r=getResult(fi); 
-	              y = r* Math.sin(fi);
-	              x = r * Math.cos(fi);
-	              y =halfHeight-(y*scaleY);
-	              nextY = (int) Math.round(y);
-	              y = halfWidth +(x*scaleX);
-	              nextX =(int) Math.round(y);  
-	              if(i==0){
-	              	prevX = nextX;
-	            	prevY = nextY;
-	              }
-	              //TODO wstawić też tu listy
-				  g2d.drawLine(prevX,
-							   prevY,
-							   nextX,
-							   nextY
-							  );
-				 prevX = nextX;
-				 prevY=  nextY; 
-				 fi=fi+delta;    
-        	  }
+private void drawGraph(Graphics2D g2d){
+			if(!this.isPatternOnList()){
+			 this.generatePoints(g2d);
+			}
+			this.drawAllGraphs(g2d);
+}
 
+private void generatePoints(Graphics2D g2d ){
+	GraphPoints gp;
+	gp=new GraphPoints(this.pattern,CoorSys.CARTESIAN,new Color((int)(Math.random() * 0x1000000)));
+	this.t2.addItem(gp.getPattern());
+	this.t2.setSelectedItem(gp.getPattern());
+	this.graphs.getGraphlist().add(gp);
+	int prevX,prevY,nextX,nextY,tmpX,tmpY;
+	double x , y,r, fi, counter;
+	y = 0.0000;
+	 try{
+	  delta = Double.parseDouble(panelRight.DELTA.getText());
+	 }catch(Exception exc){
+	  delta = 0.001;
+	  panelRight.DELTA.setText("0.001");
+	 }
+       if((delta>0.8)||(delta<0.0001)){
+		 delta = 0.001;
+		 panelRight.DELTA.setText("0.001");
         }
-        this.drawAllGraphs(g2d); // naszkicowanie wszystkich grafów
+       
+	 counter= fullWidth/delta;    
+     x=-halfWidth;
+     prevX = -2;
+     prevY = -2;		
+     gp.setSystem(CoorSys.CARTESIAN);
+	 for(int i = 0 ; i<=counter ; i++){
+          y=getResult(x);
+          y =halfHeight-(y*scaleY);
+          nextY = (int) Math.round(y);
+          y = halfWidth +(x*scaleX);
+          nextX =(int) Math.round(y);  
+   	      tmpX = nextX;
+   	      tmpY = nextY;
+         if((prevY > nextY)&&((prevY-nextY)>200)){
+        	   nextX = prevX;
+        	   nextY = prevY;
+        	   }
+         if((prevY < nextY)&&((nextY-prevY)>200)){
+      	   prevX = nextX;
+      	   prevY = nextY;
+      	   }
+		 gp.getPoints().add(new Point(nextX,nextY));
+		 prevX = tmpX;
+		 prevY=  tmpY; 
+		 x=x+delta;    
+     }
+	 // obliczenia biegunowe
+    try{
+		 Period = Double.parseDouble(panelRight.MAXFI.getText());
+		 }catch(Exception exc){
+		  Period = 12;
+		  panelRight.MAXFI.setText("12");
+		}
+        if((Period>100)||(Period<0)){
+			Period = 12;
+			panelRight.MAXFI.setText("12");	
+        }
+    gp.setSystem(CoorSys.POLAR);
+	counter = (Period*Math.PI)/delta;
+	g2d.setColor(Color.ORANGE);
+  	prevX = 0;
+	prevY = 0;
+	fi = delta;	
+      for(int i=0;i<=counter;i++){
+          r=getResult(fi); 
+          y = r* Math.sin(fi);
+          x = r * Math.cos(fi);
+          y =halfHeight-(y*scaleY);
+          nextY = (int) Math.round(y);
+          y = halfWidth +(x*scaleX);
+          nextX =(int) Math.round(y);  
+          if(i==0){
+          	prevX = nextX;
+        	prevY = nextY;
+          }
+          //TODO wstawić też tu listy
+         gp.getPolarpoints().add(new Point(nextX,nextY));
+		 prevX = nextX;
+		 prevY=  nextY; 
+		 fi=fi+delta;    
+	  }
 }
 
 public void drawAllGraphs(Graphics2D g2d){
 	System.out.println("rysuje");
 	ArrayList<Point> poin;
 	int index=0;
-	for(GraphPoints points : this.graphs.getGraphlist()){
-		g2d.setColor(points.getColor());
-		poin = points.getPoints();
-		for(index = 0; index<poin.size()-1;index=index+2){
-			g2d.drawLine(
-							(int)poin.get(index).getX(),
-							(int)poin.get(index).getY(),
-							(int)poin.get(index+1).getX(),
-							(int)poin.get(index+1).getY()
-						);
+	
+	if(this.system.equals(CoorSys.CARTESIAN)){
+		for(GraphPoints points : this.graphs.getGraphlist()){
+			g2d.setColor(points.getColor());
+			poin = points.getPoints();
+			for(index = 0; index<poin.size()-1;index=index+2){
+				g2d.drawLine(
+								(int)poin.get(index).getX(),
+								(int)poin.get(index).getY(),
+								(int)poin.get(index+1).getX(),
+								(int)poin.get(index+1).getY()
+							);
+			}
 		}
-	}
+	}else{
+		for(GraphPoints points : this.graphs.getGraphlist()){
+			g2d.setColor(points.getColor());
+			poin = points.getPolarpoints();
+			//TODO pomijanie równań niwygodnych dla systemu biegunowego 
+			if(this.skipEquation(points)){return;}
+			for(index = 0; index<poin.size()-1;index=index+2){
+				g2d.drawLine(
+								(int)poin.get(index).getX(),
+								(int)poin.get(index).getY(),
+								(int)poin.get(index+1).getX(),
+								(int)poin.get(index+1).getY()
+							);
+			}
+		}
+		
+  }
+  
+}
+/**
+ * Metoda ma za zadanie wyszukiwanie funkcji zabronionych we wzorach funkcji
+ * @param p
+ * 		   graf do sprawdzenia
+ * @return
+ * 			zwraca true jeżeli znaleziono funkcje zabronioną
+ */
+private boolean skipEquation(GraphPoints p) {
+	String [] search = {"e^x","e^(x"};  // czarna lista 
+    int index = 0;;
+    for(String s: search){
+    	index = this.pattern.indexOf(s);
+    	if(index != -1){
+        	return true;
+    	}
+    }
+    return false;
 }
 
 public void clearAll(){
@@ -786,6 +813,10 @@ public void changeSystem(){
 public String calcIntegral(double l, double h){
 	double x, delta;
 	double result = 0.000;      
+  	 GraphPoints gp = this.getSelectedGraph();
+  	 this.insertPattern(gp.getPattern());
+  	 this.toList();
+  	 this.toOnpList();
 	delta = 0.00001;
 	x = l;
 	if(l<=h){

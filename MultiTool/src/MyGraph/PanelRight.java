@@ -171,6 +171,7 @@ public void actionPerformed(ActionEvent e){
 	Object source = e.getSource();
 		 if(source == this.RescaleButton){
 			  if(this.graph!=null){
+				   this.graph.clearAll();
 				   int sx = 50;
 				   int sy = 50;
 				   this.graph.allowGraph=false;
