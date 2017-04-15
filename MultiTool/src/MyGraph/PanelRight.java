@@ -160,8 +160,11 @@ public class PanelRight extends JPanel implements ActionListener{
           add(IntegralResult);
         //  add(IntegralFuncLabel);
 		 }
-    
-/* funkcja wiążąca panel graficzny */
+
+/**
+ * Metoda wiążąca z panelem graficznym (przydatna w delegacjach)
+ * @param graph
+ */
 public void addGraph(GraphPanel graph){
 	this.graph = graph;
 	}

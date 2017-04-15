@@ -12,7 +12,7 @@ import javax.swing.ListCellRenderer;
  * Klasa reprezentująca genereator komórek listy rozwijalnej
  * (Pozwala na manipulowanie właściwościami pojedyńczych komórek jak np. kolor tła)
  */
-public class ComboBoxRenderer extends JPanel implements ListCellRenderer
+public class ComboBoxRenderer extends JPanel implements ListCellRenderer<String>
 {
 
     private static final long serialVersionUID = -1L;
@@ -22,7 +22,7 @@ public class ComboBoxRenderer extends JPanel implements ListCellRenderer
     JPanel textPanel;
     JLabel text;
 
-    public ComboBoxRenderer(JComboBox combo) {
+    public ComboBoxRenderer(JComboBox<?> combo) {
 
         textPanel = new JPanel();
         textPanel.add(this);
@@ -53,7 +53,7 @@ public class ComboBoxRenderer extends JPanel implements ListCellRenderer
     }
     
 	@Override
-	public Component getListCellRendererComponent(JList list, Object value,
+	public Component getListCellRendererComponent(JList<?extends String> list, String value,
 			int index, boolean isSelected, boolean cellHasFocus) {
 
         if (isSelected)
@@ -81,12 +81,14 @@ public class ComboBoxRenderer extends JPanel implements ListCellRenderer
             return this;
         }
         if(value !=null){
+        	System.out.println("Wstawia w pole");
 	        text.setBackground(getBackground());
-	        text.setText(value.toString());
+	        text.setText(value);
 	        if (index>-1) {
 	            text.setBackground(colors[index]);
 	        }
         }
         return text;
 	}
+
 }

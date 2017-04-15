@@ -1,9 +1,14 @@
 package MyGraph;
-
+//TODO aproksymacja
 import java.awt.*;
 
 import javax.swing.*;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.Math;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseListener;
@@ -11,10 +16,8 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Stack;
 
-import MyUtils.CoorSys;
-import MyUtils.GraphPoints;
-import MyUtils.GraphsHolder;
 import MyUtils.*;
+import MyUtils.Point;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -31,10 +34,22 @@ import java.text.DecimalFormatSymbols;
 
 class GraphPanel extends JPanel implements MouseMotionListener, MouseListener{
 	private static final long serialVersionUID = 1L;
+
 	
+	
+	/* Plik załadowany z wczytywania*/
+	private File loadedfile;
 	/* Lista rozwijalna wykresów*/
 	private JComboBox<String> t2;
 	private ComboBoxRenderer renderer;
+	
+	/* stałe używane przy generowaniu wykresów z pliku */
+	public final int INTERPOLATION = 0; 
+	public final int APPROXIMATION = 1; 
+	public final int POINTS = 2; // generowanie punktów z pliku
+	public final int NORMAL = 3; // tryb obliczania normalnego
+	public final int NORMAL_MODE = 4; //łączenie linią z pliku
+	
 	
 	private int fullWidth;
     private int fullHeight;
@@ -64,6 +79,7 @@ class GraphPanel extends JPanel implements MouseMotionListener, MouseListener{
     public boolean allowGraph; 
     public boolean allowCorSys;
     public boolean allowIntegral;
+    public boolean skipparse; //porzuca parsowanie jeżeli z pliku
     public int scaleX;
     public int scaleY;
     public double delta;
@@ -88,6 +104,7 @@ class GraphPanel extends JPanel implements MouseMotionListener, MouseListener{
 				this.allowGraph=false;
 				this.allowCorSys=true;
 				this.allowIntegral=false;
+				this.skipparse = false;
 				this.HighIntegralLim = 0.00;
 				this.LowIntegralLim = 0.00;
 				this.excFlag = false;
@@ -115,6 +132,7 @@ class GraphPanel extends JPanel implements MouseMotionListener, MouseListener{
 
    @Override
     protected void paintComponent(Graphics g){
+	   System.out.println("paintComponent()");
 		super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
             this.fullWidth = this.getWidth();
@@ -140,6 +158,7 @@ class GraphPanel extends JPanel implements MouseMotionListener, MouseListener{
     * 			referencja na komponent graficzny
     */
    public void drawIntegral(Graphics2D g2d){
+	   System.out.println("drawIntegral()");
 	   	 GraphPoints gp = this.getSelectedGraph();
 	     double l=LowIntegralLim;
 	     double h=HighIntegralLim;
@@ -148,39 +167,81 @@ class GraphPanel extends JPanel implements MouseMotionListener, MouseListener{
 	     int xx,yy;
 	     height= this.getHeight()/2;
 	     g2d.setColor(gp.getColor());
-	     if(l<=h){
-			 while(l<=h){
-				  x=l;
-				  y = getResult(l);
-				  y=halfHeight-(y*scaleY);
-				  x=halfWidth +(x*scaleX);
-				  yy =(int) Math.round(y);
-				  xx =(int) Math.round(x);
-				  g2d.drawLine(xx,
-						  	   height,
-							   xx,
-							   yy
-							  );
-	
-				 l=l+this.delta;   
+	     //reysowanie całki interpolacyjnej
+	     if(gp.getMethod()==this.INTERPOLATION){
+	    	 double [] xs = this.fromPointListToArray(gp.getFromfilepoints(),"x");
+	    	 double [] ys = this.fromPointListToArray(gp.getFromfilepoints(),"y");
+	    	 
+	    	 if(l<=h){
+				 while(l<=h){
+					  x=l;
+					  y = this.lagrangeInterpolation(xs,ys,x);
+					  y=halfHeight-(y*scaleY);
+					  x=halfWidth +(x*scaleX);
+					  yy =(int) Math.round(y);
+					  xx =(int) Math.round(x);
+					  g2d.drawLine(xx,
+							  	   height,
+								   xx,
+								   yy
+								  );
+		
+					 l=l+this.delta;   
+			     }
+		     }else{
+				 while(l>h){
+					  x=l;
+					  y = this.lagrangeInterpolation(xs,ys,x);
+					  y=halfHeight-(y*scaleY);
+					  x=halfWidth +(x*scaleX);
+					  yy =(int) Math.round(y);
+					  xx =(int) Math.round(x);
+					  g2d.drawLine(xx,
+							  	   height,
+								   xx,
+								   yy
+								  );
+		
+					 l=l-this.delta;   
+			     }	 
 		     }
+	    	 
 	     }else{
-			 while(l>h){
-				  x=l;
-				  y = getResult(l);
-				  y=halfHeight-(y*scaleY);
-				  x=halfWidth +(x*scaleX);
-				  yy =(int) Math.round(y);
-				  xx =(int) Math.round(x);
-				  g2d.drawLine(xx,
-						  	   height,
-							   xx,
-							   yy
-							  );
-	
-				 l=l-this.delta;   
-		     }	 
+		     if(l<=h){
+				 while(l<=h){
+					  x=l;
+					  y = getResult(l);
+					  y=halfHeight-(y*scaleY);
+					  x=halfWidth +(x*scaleX);
+					  yy =(int) Math.round(y);
+					  xx =(int) Math.round(x);
+					  g2d.drawLine(xx,
+							  	   height,
+								   xx,
+								   yy
+								  );
+		
+					 l=l+this.delta;   
+			     }
+		     }else{
+				 while(l>h){
+					  x=l;
+					  y = getResult(l);
+					  y=halfHeight-(y*scaleY);
+					  x=halfWidth +(x*scaleX);
+					  yy =(int) Math.round(y);
+					  xx =(int) Math.round(x);
+					  g2d.drawLine(xx,
+							  	   height,
+								   xx,
+								   yy
+								  );
+		
+					 l=l-this.delta;   
+			     }	 
+		     }
 	     }
+	     this.allowIntegral = false;
    }
 
     /**
@@ -189,6 +250,7 @@ class GraphPanel extends JPanel implements MouseMotionListener, MouseListener{
      * 			referencja na komponent graficzny
      */
 	private void initCoordinateSysytem(Graphics2D g2d){
+			System.out.println("initCoordinateSysytem()");
 			g2d.setColor(Color.BLACK);
 			g2d.drawLine(0,(this.getHeight()/2),this.fullWidth,(this.fullHeight/2));
 			g2d.drawLine((this.getWidth()/2),0,(this.fullWidth/2),this.fullHeight);
@@ -236,6 +298,7 @@ class GraphPanel extends JPanel implements MouseMotionListener, MouseListener{
   * 			wzór funkcji
   **/
  public void insertPattern(String pattern){
+		System.out.println("insertPattern()");
 	    this.pattern=new String(pattern);
  }
 	   
@@ -249,6 +312,7 @@ class GraphPanel extends JPanel implements MouseMotionListener, MouseListener{
   * 		zwraca true jeżeli wzór zawiera poprawne znaki
   */
 private boolean checkAlphabet(String pattern){
+		System.out.println("checkAlpchabet()");
 		  char[] txt = pattern.toCharArray(); 
 		  for(char c : txt){
 			  switch(c){
@@ -281,11 +345,13 @@ private boolean checkAlphabet(String pattern){
  * 		Zwraca true jeżeli wzór poprawnie zwalidowany
  */
 private boolean parsePattern(){
+	System.out.println("parsePattern()");
 	 if (!checkAlphabet(this.pattern)){
 		  return false;
 		 }
      return true;
 	}
+
 
 /* funkcje parsujące */
 
@@ -573,8 +639,12 @@ private double getResult(double x){
 	return 0.00;
 }
  
-/* ładuje łańcuch znaków do listy wzoru operuje na polach prywatnych iterator , list oraz uzywa pola pattern */	
+
+/**
+ * Metoda ładuje łańcuch znaków do listy wzoru operuje na polach prywatnych iterator , list oraz uzywa pola pattern
+ */
 private void toList(){
+		System.out.println("toList()");
 		   this.list.clear();
 		   this.iterator = 0;
 		   char[] str = this.pattern.toCharArray();
@@ -627,8 +697,12 @@ private void toList(){
 }
   
     
-/* przekształca listę z wyrażeniem w zwykłej postaci na listę w postaci onp */
+
+/**
+ * Metoda przekształca listę z wyrażeniem w zwykłej postaci na listę w postaci onp
+ */
 private void toOnpList(){
+	System.out.println("toOnpList()");
 		this.onpList.clear();
 	   /* kod przekształcający */
 	   int i;
@@ -661,8 +735,12 @@ private void toOnpList(){
 	   this.onpList.add(new Struct('=',0.00));
 }
 
-/* funkcja oczyszczająca listy i stos */	
+
+/**
+ * Metoda oczyszczająca listy i stos 
+ */
 private void clearAbstractElements(){
+	System.out.println("clearAbstractElements()");
 	while(!this.stack.empty()){
 			 this.stack.pop();
 	 }
@@ -672,9 +750,31 @@ private void clearAbstractElements(){
 }
 
 
-/* sprawdzenie poprawności grafu do narysowania */   
+
+/**
+ *Sprawdzenie poprawności grafu do narysowania
+ * @param g2d
+ * 			Komponent graficzny
+ */
 public void initGraph(Graphics2D g2d){
-	      if(!t2.isVisible()){this.t2.setVisible(true);this.allowGraph = true;}
+	System.out.println("initGraph()");
+	   if(this.skipparse){this.skipparse = false;this.drawAllGraphs(g2d);return;}  //TODO tu jestem
+	   if(!t2.isVisible()){this.t2.setVisible(true);this.allowGraph = true;}
+	   if(this.isPatternOnList()){
+		   System.out.println("był na liście");
+		   this.drawAllGraphs(g2d);
+			if(this.allowIntegral ){
+				//TODO usunąć z tego warunku aproksymacje po zrobieniu całki
+				if(this.getSelectedGraph().getMethod()==this.POINTS || this.getSelectedGraph().getMethod()==this.NORMAL_MODE || this.getSelectedGraph().getMethod()==this.APPROXIMATION){return;}
+				try{
+				 drawIntegral(g2d);
+				 this.allowIntegral = false;
+				}catch(Exception x){
+					//TODO tu musze obsłużyć wyjątek :)
+				}
+			}
+		   return;
+	  }
 		  if(this.pattern!=null && this.pattern.length()!=0){
 			if(parsePattern()){
 				if(this.allowGraph){
@@ -683,6 +783,7 @@ public void initGraph(Graphics2D g2d){
 					toOnpList();
 					if(this.allowIntegral){
 						try{
+						if(this.getSelectedGraph().getMethod()==this.POINTS || this.getSelectedGraph().getMethod()==this.NORMAL_MODE || this.getSelectedGraph().getMethod()==this.APPROXIMATION){return;}
 						 drawIntegral(g2d);
 						}catch(Exception x){
 							//TODO tu musze obsłużyć wyjątek :)
@@ -692,7 +793,6 @@ public void initGraph(Graphics2D g2d){
 						this.allowIntegral = false;
 						this.drawGraph(g2d);
 						g2d.setColor(Color.BLACK);
-					//	g2d.drawString(this.pattern,1,10);
 					 }catch(Exception exc){
 						this.excFlag = true;
 						this.allowCorSys = false;				  
@@ -711,7 +811,18 @@ public void initGraph(Graphics2D g2d){
 				 g2d.drawString("wyrażenia! ",1,150);
 				 this.t2.setVisible(false);
 		  }
+	   }else if(this.graphs.getGraphlist().size()>0){
+		   this.drawAllGraphs(g2d);
+			if(this.allowIntegral){
+				try{
+				if(this.getSelectedGraph().getMethod()==this.POINTS || this.getSelectedGraph().getMethod()==this.NORMAL_MODE || this.getSelectedGraph().getMethod()==this.APPROXIMATION){return;}
+				 drawIntegral(g2d);
+				}catch(Exception x){
+					//TODO tu musze obsłużyć wyjątek :)
+				}
+			}
 	   }
+		
 }
 		 
 /**
@@ -720,6 +831,7 @@ public void initGraph(Graphics2D g2d){
  * 				referencja na komponent graficzny
  */
 private void drawGraph(Graphics2D g2d){
+	System.out.println("drawGraph()");
 			if(!this.isPatternOnList()){
 			 this.generatePoints(g2d);
 			}
@@ -733,8 +845,9 @@ private void drawGraph(Graphics2D g2d){
  */
 
 private void generatePoints(Graphics2D g2d ){
+	System.out.println("generatePoints()");
 	GraphPoints gp;
-	gp=new GraphPoints(this.pattern,CoorSys.CARTESIAN,new Color((int)(Math.random() * 0x1000000)));
+	gp=new GraphPoints(this.pattern,new Color((int)(Math.random() * 0x1000000)),this.NORMAL);
 	this.t2.addItem(gp.getPattern());
 	this.t2.setSelectedItem(gp.getPattern());
 	this.graphs.getGraphlist().add(gp);
@@ -757,7 +870,6 @@ private void generatePoints(Graphics2D g2d ){
      x=-halfWidth;
      prevX = -2;
      prevY = -2;		
-     gp.setSystem(CoorSys.CARTESIAN);
 	 for(int i = 0 ; i<=counter ; i++){
           y=getResult(x);
           y =halfHeight-(y*scaleY);
@@ -790,7 +902,6 @@ private void generatePoints(Graphics2D g2d ){
 			Period = 12;
 			panelRight.MAXFI.setText("12");	
         }
-    gp.setSystem(CoorSys.POLAR);
 	counter = (Period*Math.PI)/delta;
 	g2d.setColor(Color.ORANGE);
   	prevX = 0;
@@ -807,8 +918,7 @@ private void generatePoints(Graphics2D g2d ){
           if(i==0){
           	prevX = nextX;
         	prevY = nextY;
-          }
-          //TODO wstawić też tu listy
+          }         
          gp.getPolarpoints().add(new Point(nextX,nextY));
 		 prevX = nextX;
 		 prevY=  nextY; 
@@ -821,59 +931,243 @@ private void generatePoints(Graphics2D g2d ){
  * @param g2d
  * 			referencja na komponent graficzny
  */
+
 public void drawAllGraphs(Graphics2D g2d){
-	System.out.println("rysuje");
-	ArrayList<Point> poin;
-	int index=0;
-	int graphssize = this.graphs.getGraphlist().size()+1;
-	String[] s = new String[graphssize];
-	Color[] c = new Color[graphssize];
-	for(GraphPoints points : this.graphs.getGraphlist()){
-		s[index] = points.getPattern();
-		c[index] = points.getColor();
-	    index = index + 1;
-	}
-	if(index!=0){
-		this.renderer.setStrings(s);
-		this.renderer.setColors(c);
-		this.t2.setRenderer(this.renderer);
-	}else{
-		this.t2.setRenderer(null);
-	}
-	index=0;
+	System.out.println("drawAllGrpahs()");
 	//modyfikacja kolorów listy rozwijalnej
-	if(this.system.equals(CoorSys.CARTESIAN)){
 		for(GraphPoints points : this.graphs.getGraphlist()){
 			g2d.setColor(points.getColor());
-			poin = points.getPoints();
-			for(index = 0; index<poin.size()-1;index=index+2){
-				g2d.drawLine(
-								(int)poin.get(index).getX(),
-								(int)poin.get(index).getY(),
-								(int)poin.get(index+1).getX(),
-								(int)poin.get(index+1).getY()
-							);
+			if(points.getMethod() == this.NORMAL){
+				this.drawPoints(g2d,points);
+			}else if(points.getMethod()==this.POINTS){
+				System.out.println("generuje punkty");
+				this.makePoints(g2d,points);
+			}else if(points.getMethod()==this.INTERPOLATION){
+				this.makeInterpolation(g2d,points);
+			}else if(points.getMethod()==this.APPROXIMATION){
+				this.makeApproximation(g2d,points);
+			}else if(points.getMethod() == this.NORMAL_MODE){
+				System.out.println("tryb lini łączenie");
+				this.makeNormalLines(g2d,points);
 			}
+		}
+}
+
+/**
+ * Metoda interpolująca
+ * @param g2d
+ * 			komponentraficzny
+ * @param points2
+ * 			wykres
+ */
+private void makeInterpolation(Graphics2D g2d, GraphPoints points2) {
+	System.out.println("interpolacjaaaaa");
+	if(!points2.isAlreadyCalculated()){
+		points2.setAlreadyCalculated(true);
+		double []xs = this.fromPointListToArray(points2.getPoints(),"x");
+		double []ys = this.fromPointListToArray(points2.getPoints(),"y");
+        double max = this.max(xs);
+        double min = this.min(xs);
+        ArrayList<Point> p = new ArrayList<Point>();
+        while(min<max){
+        	p.add(new Point(min,this.lagrangeInterpolation(xs, ys,min)));
+        	min = min + this.delta;
+        }		
+        points2.setFromfilepoints(points2.getPoints());
+        points2.setPoints(p);
+	}
+	
+	this.drawPoints(g2d, points2);
+}
+
+/**
+ * Generuje tablicę współrzednych z listy punktów 
+ * @param points2
+ * 			Lista punktów			
+ * @param string
+ * 			współrzędna do wyciągnięcia jeżeli ustawiona na "x" to zwracamy tablice współrzednych x, analogicznie "y"
+ * @return
+ * 			Zwraca tablicę współrzędnych
+ */
+private double[] fromPointListToArray(ArrayList<Point> points2, String string) {
+	// TODO Auto-generated method stub
+	if(points2 == null)return null;
+	double [] tab =new double[points2.size()];
+	int index = 0;
+	if(string.equals("x")){
+		for(Point pp:points2){
+			tab[index] = pp.getX();
+			index = index +1;
 		}
 	}else{
-		for(GraphPoints points : this.graphs.getGraphlist()){
-			g2d.setColor(points.getColor());
-			poin = points.getPolarpoints();
-			//TODO pomijanie równań niwygodnych dla systemu biegunowego 
-			if(this.skipEquation(points)){continue;}
-			for(index = 0; index<poin.size()-1;index=index+2){
-				g2d.drawLine(
-								(int)poin.get(index).getX(),
-								(int)poin.get(index).getY(),
-								(int)poin.get(index+1).getX(),
-								(int)poin.get(index+1).getY()
-							);
-			}
+		for(Point pp:points2){
+			tab[index] = pp.getY();
+			index = index +1;
 		}
-		
-  }
-  
+	}
+	return tab;
 }
+
+/**
+ * Metoda szukania minimum
+ * @param tab
+ * 			tablica do przeszukania
+ * @return
+ * 		Zwracanajmniejszą liczbę
+ */
+private double min(double [] tab){
+	double min = 0;
+	for(double m:tab){
+		if(m<min){min = m;}
+	}
+	return min;
+}
+
+/**
+ * Metoda szukania maksimum
+ * @param tab
+ * 			tablica do przeszukania
+ * @return
+ * 		Zwraca największą liczbę
+ */
+private double max(double [] tab){
+	double max = 0;
+	for(double m:tab){
+		if(m>max){max = m;}
+	}
+	return max;
+}
+
+/**
+ * Metoda interpolująca według zadanych punktów
+ * @param xs
+ * 			tablica współrzednych x
+ * @param ys
+ * 			tablica współrzędnych y
+ * @param x
+ * 			punkt x do policzenia
+ * @return
+ */
+public double lagrangeInterpolation(double[] xs, double[] ys, double x ){
+double t;
+double y = 0.0;
+ 
+for(int k = 0; k< xs.length; k++){
+	t = 1.0;
+	for(int j = 0; j < xs.length ; j++){
+		if(j != k ){
+		t=t*((x-xs[j])/(xs[k]-xs[j])); 
+		}
+	}
+	y += t*ys[k];
+}
+return y;
+}
+
+
+
+/**
+ * Metoda aproksymująca
+ * @param g2d
+ * 			komponentraficzny
+ * @param points2
+ * 			wykres
+ */
+private void makeApproximation(Graphics2D g2d, GraphPoints points2) {
+	//TODO aproksymacja
+	
+	
+}
+
+/**
+ * Rysuje graf według punktów z listy według określonych reguł
+ * @param g2d
+ * 		komponent graficzny
+ * @param p
+ * 		lista punktów
+ * 
+ */
+private void drawPoints(Graphics2D g2d,GraphPoints points2){
+    g2d.setColor(points2.getColor());
+	int index = 0;
+	ArrayList<Point>p= null;
+	if(this.system.equals(CoorSys.POLAR) && points2.getMethod()==this.NORMAL){
+		if(this.skipEquation(points2)){return;}
+		p = points2.getPolarpoints();
+	}else{
+	    p = points2.getPoints();
+	}
+	if(points2.getMethod()==this.NORMAL){
+		for(index = 0; index<p.size()-1;index=index+1){
+			g2d.drawLine(
+							(int)p.get(index).getX(),
+							(int)p.get(index).getY(),
+							(int)p.get(index+1).getX(),
+							(int)p.get(index+1).getY()
+						);
+		}
+	}else{
+	    int x=0;
+	    int y=0;
+	    int x2=0;
+	    int y2=0;
+	    int i = 0;
+			for(i=0;i<points2.getPoints().size()-1;i++){
+				x = (int)(this.halfWidth+(points2.getPoints().get(i).getX()*scaleX));
+				y = (int)(this.halfHeight-(points2.getPoints().get(i).getY()*scaleY));
+				x2 = (int)(this.halfWidth+(points2.getPoints().get(i+1).getX()*scaleX));
+			    y2 = (int)(this.halfHeight-(points2.getPoints().get(i+1).getY()*scaleY));
+				g2d.drawLine(x,y,x2,y2);
+			}
+	}
+}
+
+
+/**
+ * Metoda tworzy zbiór punktów na podstawie znalezionego wykresu
+ * @param g2d
+ * 			komponentraficzny
+ * @param gp
+ * 			wykres
+ */
+private void makePoints(Graphics2D g2d,GraphPoints gp) {
+	System.out.println("makePoints()");
+    g2d.setColor(gp.getColor());
+    int x=0;
+    int y=0;
+	for(Point p:gp.getPoints()){
+		x = (int)(this.halfWidth+(p.getX()*scaleX));
+		y = (int)(this.halfHeight-(p.getY()*scaleY));
+		g2d.fillRect(x,y,3,3);
+	}
+}
+
+/**
+ * Metoda łącząca punkty podane
+ * @param g2d
+ * 			komponentraficzny
+ * @param points2
+ * 			wykres
+ */
+private void makeNormalLines(Graphics2D g2d, GraphPoints points2){
+	System.out.println("makeNormalLines()");
+	this.makePoints(g2d,points2);
+    g2d.setColor(points2.getColor());
+    int x=0;
+    int y=0;
+    int x2=0;
+    int y2=0;
+    int i = 0;
+ //   points2.getPoints().sort((Comparator<? super Point>) points2.getPoints());
+	for(i=0;i<points2.getPoints().size()-2;i++){
+		x = (int)(this.halfWidth+(points2.getPoints().get(i).getX()*scaleX));
+		y = (int)(this.halfHeight-(points2.getPoints().get(i).getY()*scaleY));
+		x2 = (int)(this.halfWidth+(points2.getPoints().get(i+1).getX()*scaleX));
+	    y2 = (int)(this.halfHeight-(points2.getPoints().get(i+1).getY()*scaleY));
+		g2d.drawLine(x,y,x2,y2);
+	}
+}
+
 /**
  * Metoda ma za zadanie wyszukiwanie funkcji zabronionych we wzorach funkcji
  * @param p
@@ -882,9 +1176,9 @@ public void drawAllGraphs(Graphics2D g2d){
  * 			zwraca true jeżeli znaleziono funkcje zabronioną
  */
 private boolean skipEquation(GraphPoints p) {
-	String [] search = {"e^x","e^(x"};  // czarna lista 
+	System.out.println("skipEquation()");
     int index = 0;;
-    for(String s: search){
+    for(String s: Config.BLACK_LIST){
     	index = p.getPattern().indexOf(s);
     	if(index != -1){
         	return true;
@@ -892,14 +1186,23 @@ private boolean skipEquation(GraphPoints p) {
     }
     return false;
 }
-
+/**
+ * Czyszczenie danych
+ */
 public void clearAll(){
+	System.out.println("clearAll()");
+	this.pattern = "";
+	this.onpList.clear();
+	this.list.clear();
 	this.graphs.clearAll();
 	this.t2.removeAllItems();
 	this.renderer = new ComboBoxRenderer(t2);
 }
-
+/**
+ * Metoda zmienia system współrzędnych
+ */
 public void changeSystem(){
+	System.out.println("changeSysytem()");
 	if(this.system.equals(CoorSys.POLAR)){
 	 this.system = CoorSys.CARTESIAN;	
 	 this.panelRight.SystemNameLabel.setText("Cartesian");
@@ -940,29 +1243,63 @@ public void changeSystem(){
  * 			zwraca wynik w postaci łańcucha znaków
  */
 public String calcIntegral(double l, double h){
+	System.out.println("calcIntegral()");
 	double x, delta;
+	delta = 0.00001;
 	double result = 0.000;      
   	 GraphPoints gp = this.getSelectedGraph();
-  	 this.insertPattern(gp.getPattern());
-  	 this.toList();
-  	 this.toOnpList();
-	delta = 0.00001;
-	x = l;
-	if(l<=h){
-	 	while(x<h){
-	      result = result + (getResult(x)*delta);
-	 	  x = x+delta;   	 
-	 	 }
-	}else{
-		 while(x>h){
-			  result = result - (getResult(x)*delta);
-		  x = x-delta;   
-		 }		
-	}
-    this.LowIntegralLim = l;
-    this.HighIntegralLim = h;
-    this.allowIntegral = true;
-    this.repaint();
+  	 if(gp.getMethod()== this.INTERPOLATION){        //całkowanie wykresu interpolowanego
+  		 double [] xs = this.fromPointListToArray(gp.getFromfilepoints(),"x");
+  		 double [] ys = this.fromPointListToArray(gp.getFromfilepoints(),"y");
+  		 
+  		 double max = this.max(xs);
+  		 double min = this.min(xs);
+  		System.out.println("max = "+ max);
+  		System.out.println("min = "+ min);
+  		if((l>min) && (h<max)){
+  			System.out.println("wesłooooo");
+  			x = l;
+  			if(l<=h){
+  			 	while(x<h){
+  			      result = result + (this.lagrangeInterpolation(xs,ys,x)*delta);
+  			 	  x = x+delta;   	 
+  			 	 }
+  			}else{
+  				 while(x>h){
+  					  result = result - (this.lagrangeInterpolation(xs,ys,x)*delta);
+  				  x = x-delta;   
+  				 }		
+  			}
+  		    this.LowIntegralLim = l;
+  		    this.HighIntegralLim = h;
+  		    this.allowIntegral = true;
+  		    this.repaint();
+  		}else{
+  			//TODO powiadominie że granice całkowania nie mieszczą sie w interpolowanym złe
+  		}
+  	 }else{
+	  	 //TODO wstawka całka tylko dla trybu normalnego
+	  	 if(gp.getMethod()!=3){return " ";}
+	  	 this.insertPattern(gp.getPattern());
+	  	 this.toList();
+	  	 this.toOnpList();
+		x = l;
+		if(l<=h){
+		 	while(x<h){
+		      result = result + (getResult(x)*delta);
+		 	  x = x+delta;   	 
+		 	 }
+		}else{
+			 while(x>h){
+				  result = result - (getResult(x)*delta);
+			  x = x-delta;   
+			 }		
+		}
+	    this.LowIntegralLim = l;
+	    this.HighIntegralLim = h;
+	    this.allowIntegral = true;
+	    this.repaint();
+  	 }
 	return this.dF.format(result);
 }
 
@@ -1012,6 +1349,7 @@ public String calcIntegral(double l, double h){
 		  }
 /**
  * Metoda sprawdza czy wzór funkcji jest na liście
+ * @param pattern2 
  * @return
  * 		Zwraca true jeżeli tak
  */
@@ -1069,4 +1407,80 @@ private GraphPoints getSelectedGraph(){
 		
 		}
 
+	/**
+	 * Metoda generująca wykres z pliku
+	 * @param selectedFile
+	 */
+	public void generateFromFile(File selectedFile, int method) {
+		System.out.println("generateFromFile()");
+		this.loadedfile = selectedFile;
+	    int index = 0;;
+	    for(String s: Config.ALLOWED_EXTENSIONS){
+	    	index = this.loadedfile.getName().indexOf(s);
+	    	if(index != -1){
+	    		if(this.loadFileToPoints(method)){
+	    			this.allowGraph = true;
+	    			this.skipparse = true;
+	    			this.repaint();
+	    		}
+	    		return;
+	    	}
+	    }
+	}
+	/**
+	 * Metoda ładuje dane z pliku csv do listy wykresów jako punkty
+	 */
+	private boolean loadFileToPoints(int method) {
+		System.out.println("loadFilePoints()");
+		double x= 0;
+		double y = 0;
+		int delimiterindex = 0;
+		BufferedReader in;
+		String operationname = "points";
+		
+		switch(method){
+			case APPROXIMATION:
+				operationname = "approximation";
+			break;
+			case INTERPOLATION :
+				operationname = "interpolation";
+			break;
+			case NORMAL_MODE:
+				operationname = "lines";
+			break;
+		}
+	    GraphPoints gp = new GraphPoints(this.loadedfile.getName().toString()+"-"+operationname,new Color((int)(Math.random() * 0x1000000)),method);
+	    this.graphs.getGraphlist().add(gp);
+		try {
+			in = new BufferedReader(
+			        new InputStreamReader(new FileInputStream(this.loadedfile)));
+		    String r;
+		    this.t2.addItem(gp.getPattern()); //TODO lista rozwijalna
+		    this.t2.setSelectedItem(gp.getPattern());
+			while((r = in.readLine()) != null) {
+				delimiterindex = r.indexOf(Config.CSV_SEPARATOR); //
+				r=r.replaceAll(",",".");
+				try{
+					x = Double.parseDouble(r.subSequence(0,delimiterindex).toString());
+					y = Double.parseDouble(r.subSequence(delimiterindex+1,r.length()-1).toString());
+					gp.getPoints().add(new Point(x,y));
+				}catch(Exception e){
+					in.close();
+					this.graphs.getGraphlist().remove(gp);
+					this.pattern = "";
+					gp.clearAll();
+					e.printStackTrace();
+					return false;
+				}
+			}
+			in.close();
+		} catch (IOException e) {
+			this.graphs.getGraphlist().remove(gp);
+			this.pattern = "";
+			gp.clearAll();
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
 }

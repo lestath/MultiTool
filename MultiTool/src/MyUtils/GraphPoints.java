@@ -1,7 +1,6 @@
 package MyUtils;
 
 import java.awt.Color;
-import java.awt.Point;
 import java.util.ArrayList;
 
 /**
@@ -10,18 +9,23 @@ import java.util.ArrayList;
  *
  */
 public class GraphPoints{
+	private boolean alreadyCalculated; //flaga ustawia się na true jeżeli nastapiło wyliczenie punktów
 	private ArrayList<Point> points;
 	private ArrayList<Point> polarpoints;
+	private ArrayList<Point> fromfilepoints;
 	private String pattern;
-	private CoorSys system;
 	private Color color;
 	
-	public GraphPoints(String pat,CoorSys system,Color c){
+	private int method; //metoda rysowania z punktów
+	
+	public GraphPoints(String pat,Color c,int method){
+		
 		this.points = new ArrayList<Point>();
 		this.polarpoints = new ArrayList<Point>();
 		this.pattern = pat;
-		this.system = system;
 		this.color = c;
+		this.alreadyCalculated = false;
+		this.setMethod(method);
 	}
 
 	public ArrayList<Point> getPoints() {
@@ -46,14 +50,6 @@ public class GraphPoints{
 		this.pattern = pattern;
 	}
 
-	public CoorSys getSystem() {
-		return system;
-	}
-
-	public void setSystem(CoorSys system) {
-		this.system = system;
-	}
-
 	public Color getColor() {
 		return color;
 	}
@@ -73,6 +69,30 @@ public class GraphPoints{
 
 	public void setPolarpoints(ArrayList<Point> polarpoints) {
 		this.polarpoints = polarpoints;
+	}
+
+	public int getMethod() {
+		return method;
+	}
+
+	public void setMethod(int method) {
+		this.method = method;
+	}
+
+	public boolean isAlreadyCalculated() {
+		return alreadyCalculated;
+	}
+
+	public void setAlreadyCalculated(boolean alreadyCalculated) {
+		this.alreadyCalculated = alreadyCalculated;
+	}
+
+	public ArrayList<Point> getFromfilepoints() {
+		return fromfilepoints;
+	}
+
+	public void setFromfilepoints(ArrayList<Point> fromfilepoints) {
+		this.fromfilepoints = fromfilepoints;
 	}
 	
 }
