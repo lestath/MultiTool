@@ -174,10 +174,10 @@ public void actionPerformed(ActionEvent e){
 	Object source = e.getSource();
 		 if(source == this.RescaleButton){
 			  if(this.graph!=null){
-				   this.graph.clearAll();
+				//   this.graph.clearAll();
 				   int sx = 50;
 				   int sy = 50;
-				   this.graph.allowGraph=false;
+				  // this.graph.allowGraph=false;
 				   try{
 				    sx = Integer.parseInt(this.SCALEX.getText());
 				    sy = Integer.parseInt(this.SCALEY.getText());
@@ -191,9 +191,10 @@ public void actionPerformed(ActionEvent e){
 					   }
 					this.graph.scaleX = sx;
 					this.graph.scaleY = sy;
-				    this.graph.repaint();
 					this.SCALEX.setText(Integer.toString(sx));
 					this.SCALEY.setText(Integer.toString(sy));	
+					this.graph.setRescalemode(true); //wchodzimy w tryb przeskalowania
+				    this.graph.repaint();
 				  }
 			 }else if(source == this.ChangeSystemButton){
 				this.graph.changeSystem();	

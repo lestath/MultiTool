@@ -35,8 +35,8 @@ import java.text.DecimalFormatSymbols;
 class GraphPanel extends JPanel implements MouseMotionListener, MouseListener{
 	private static final long serialVersionUID = 1L;
 
-	
-	
+	/* Flaga mówiąca o tym czy jesteśmy w trybie przeskalowania wykresu */
+	private boolean rescalemode;
 	/* Plik załadowany z wczytywania*/
 	private File loadedfile;
 	/* Lista rozwijalna wykresów*/
@@ -87,6 +87,8 @@ class GraphPanel extends JPanel implements MouseMotionListener, MouseListener{
     
     public PanelRight panelRight;  
     public ButtonPanel buttonPanel;
+
+	private GraphPoints ActualGraph; //aktualnie rozpatrywany graf do rysowania punktów po przeskalowaniu korzysta z niego przy rosowaniu wszystkich grafów
     
     
 	
@@ -96,7 +98,7 @@ class GraphPanel extends JPanel implements MouseMotionListener, MouseListener{
     			t2 = new JComboBox<String>();
     			this.renderer = new ComboBoxRenderer(t2);
     			this.add(t2);
-    			
+    			this.rescalemode = false;
 				addMouseMotionListener(this);
 				addMouseListener(this);
 				setVisible(true);
@@ -312,7 +314,7 @@ class GraphPanel extends JPanel implements MouseMotionListener, MouseListener{
   * 		zwraca true jeżeli wzór zawiera poprawne znaki
   */
 private boolean checkAlphabet(String pattern){
-		System.out.println("checkAlpchabet()");
+		System.out.println("checkAlphabet()");
 		  char[] txt = pattern.toCharArray(); 
 		  for(char c : txt){
 			  switch(c){
@@ -641,7 +643,7 @@ private double getResult(double x){
  
 
 /**
- * Metoda ładuje łańcuch znaków do listy wzoru operuje na polach prywatnych iterator , list oraz uzywa pola pattern
+ * Metoda ładuje łańcuch znaków do listy wzoru operuje na polach prywatnych iterator , list oraz używa pola pattern
  */
 private void toList(){
 		System.out.println("toList()");
@@ -758,9 +760,10 @@ private void clearAbstractElements(){
  */
 public void initGraph(Graphics2D g2d){
 	System.out.println("initGraph()");
+		if(this.isRescalemode()){this.drawAllGraphs(g2d);return;} //TODO tesotowe
 	   if(this.skipparse){this.skipparse = false;this.drawAllGraphs(g2d);return;}  //TODO tu jestem
 	   if(!t2.isVisible()){this.t2.setVisible(true);this.allowGraph = true;}
-	   if(this.isPatternOnList()){
+	   if(this.isPatternOnList() && !this.isRescalemode()){
 		   System.out.println("był na liście");
 		   this.drawAllGraphs(g2d);
 			if(this.allowIntegral ){
@@ -787,6 +790,7 @@ public void initGraph(Graphics2D g2d){
 						 drawIntegral(g2d);
 						}catch(Exception x){
 							//TODO tu musze obsłużyć wyjątek :)
+							//x.printStackTrace();
 						}
 					}
 					try{
@@ -844,14 +848,19 @@ private void drawGraph(Graphics2D g2d){
  * 			referencja na komponent graficzny
  */
 
-private void generatePoints(Graphics2D g2d ){
+private void generatePoints(Graphics2D g2d){
 	System.out.println("generatePoints()");
-	GraphPoints gp;
-	gp=new GraphPoints(this.pattern,new Color((int)(Math.random() * 0x1000000)),this.NORMAL);
-	this.t2.addItem(gp.getPattern());
+	GraphPoints gp = this.ActualGraph;
+	if(gp==null){
+		gp=new GraphPoints(this.pattern,new Color((int)(Math.random() * 0x1000000)),this.NORMAL);
+		this.t2.addItem(gp.getPattern());
+		this.graphs.getGraphlist().add(gp);
+	}else{
+		this.pattern = gp.getPattern();
+		this.toList();
+		this.toOnpList();
+	}
 	this.t2.setSelectedItem(gp.getPattern());
-	this.graphs.getGraphlist().add(gp);
-
 	int prevX,prevY,nextX,nextY,tmpX,tmpY;
 	double x , y,r, fi, counter;
 	y = 0.0000;
@@ -938,6 +947,14 @@ public void drawAllGraphs(Graphics2D g2d){
 		for(GraphPoints points : this.graphs.getGraphlist()){
 			g2d.setColor(points.getColor());
 			if(points.getMethod() == this.NORMAL){
+				if(this.isRescalemode()){
+					points.clearAll();
+					this.ActualGraph = points;
+					System.out.println("Tryb przeskalowania");
+					this.t2.setSelectedItem(this.ActualGraph);
+					this.pattern = this.ActualGraph.getPattern();
+					this.generatePoints(g2d);
+				}
 				this.drawPoints(g2d,points);
 			}else if(points.getMethod()==this.POINTS){
 				System.out.println("generuje punkty");
@@ -950,7 +967,9 @@ public void drawAllGraphs(Graphics2D g2d){
 				System.out.println("tryb lini łączenie");
 				this.makeNormalLines(g2d,points);
 			}
+			this.ActualGraph = null;
 		}
+		this.setRescalemode(false);
 }
 
 /**
@@ -1098,6 +1117,7 @@ private void drawPoints(Graphics2D g2d,GraphPoints points2){
 	    p = points2.getPoints();
 	}
 	if(points2.getMethod()==this.NORMAL){
+		System.out.println("rysuje punkty "+p.size()+" "+p.get(300).getY());
 		for(index = 0; index<p.size()-1;index=index+1){
 			g2d.drawLine(
 							(int)p.get(index).getX(),
@@ -1421,7 +1441,7 @@ private GraphPoints getSelectedGraph(){
 	    		if(this.loadFileToPoints(method)){
 	    			this.allowGraph = true;
 	    			this.skipparse = true;
-	    			this.repaint();
+	    			this.repaint();   //TODO jakby się zapętliło to tu jest przyczyna
 	    		}
 	    		return;
 	    	}
@@ -1450,6 +1470,9 @@ private GraphPoints getSelectedGraph(){
 			break;
 		}
 	    GraphPoints gp = new GraphPoints(this.loadedfile.getName().toString()+"-"+operationname,new Color((int)(Math.random() * 0x1000000)),method);
+	   //TODO przypisanie pliku do grafu
+	    gp.setSource(this.loadedfile);
+	    
 	    this.graphs.getGraphlist().add(gp);
 		try {
 			in = new BufferedReader(
@@ -1482,5 +1505,13 @@ private GraphPoints getSelectedGraph(){
 			return false;
 		}
 		return true;
+	}
+
+	public boolean isRescalemode() {
+		return rescalemode;
+	}
+
+	public void setRescalemode(boolean rescalemode) {
+		this.rescalemode = rescalemode;
 	}
 }

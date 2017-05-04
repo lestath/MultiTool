@@ -1,6 +1,7 @@
 package MyUtils;
 
 import java.awt.Color;
+import java.io.File;
 import java.util.ArrayList;
 
 /**
@@ -13,6 +14,7 @@ public class GraphPoints{
 	private ArrayList<Point> points;
 	private ArrayList<Point> polarpoints;
 	private ArrayList<Point> fromfilepoints;
+	private File source; //źródło grafu z pliku
 	private String pattern;
 	private Color color;
 	
@@ -93,6 +95,15 @@ public class GraphPoints{
 
 	public void setFromfilepoints(ArrayList<Point> fromfilepoints) {
 		this.fromfilepoints = fromfilepoints;
+	}
+
+	
+	public File getSource() {
+		return source;
+	}
+
+	public void setSource(File source) {
+		this.source = source;
 	}
 	
 }
