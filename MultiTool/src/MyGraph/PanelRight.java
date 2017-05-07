@@ -7,6 +7,8 @@ import javax.swing.JTextField;
 import javax.swing.JLabel;
 import javax.swing.JButton;
 
+import MyUtils.CoorSys;
+
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -74,7 +76,7 @@ public class PanelRight extends JPanel implements ActionListener{
 		 IntegralButton.addActionListener(this);
 		 SystemNameLabel = new JLabel("Cartesian");
 		 
-		 ChangeSystemButton = new JButton("System");
+		 ChangeSystemButton = new JButton("Cartes");
 		 ChangeSystemButton.addActionListener(this);
 		 
 		 LowIntegralLim = new JTextField("0.000");
@@ -197,7 +199,13 @@ public void actionPerformed(ActionEvent e){
 				    this.graph.repaint();
 				  }
 			 }else if(source == this.ChangeSystemButton){
+				if(this.graph.getSystem()==CoorSys.POLAR){
+					this.ChangeSystemButton.setText("Cartes");
+				}else{
+					this.ChangeSystemButton.setText("Polar    ");
+				}
 				this.graph.changeSystem();	
+				
 			 }else if(source == this.IntegralButton){
 				double l;
 				double h;

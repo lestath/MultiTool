@@ -33,6 +33,14 @@ import java.text.DecimalFormatSymbols;
 /* koniec */
 
 class GraphPanel extends JPanel implements MouseMotionListener, MouseListener{
+	public CoorSys getSystem() {
+		return system;
+	}
+
+	public void setSystem(CoorSys system) {
+		this.system = system;
+	}
+
 	private static final long serialVersionUID = 1L;
 
 	/* Flaga mówiąca o tym czy jesteśmy w trybie przeskalowania wykresu */
