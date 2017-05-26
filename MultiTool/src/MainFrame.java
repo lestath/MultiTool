@@ -22,6 +22,7 @@ public class MainFrame extends JFrame{
 		  setIconImage(mainicon.getImage());
 		  setSize(830,750);
 		  setResizable(false);
+		  setLocationRelativeTo(null);
 		  setVisible(true);
 		  MainGraphPanel graph = new MainGraphPanel();
 		// MainCount count = new MainCount();
