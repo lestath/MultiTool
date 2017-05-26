@@ -1,0 +1,32 @@
+<h3>Generowanie wykresu</h3>
+<p>
+Do poprawnego wygenerowania wykresu należy wprowadzić wzór funkcji. Dokonać
+tego można w pasku na górze programu, który poprzedzony jest etykietą f(x)= .
+Wprowadzanie forumły
+Formuły należy wprowadzać według zasad zapisu matematycznego. Dozwolone
+</p>
+<h4>znaki wprowadzania formuły są nastepujące :<h4>
+<p>
+• + dodawanie
+• - odejmowanie
+• * mnożenie
+• / dzielenie (stosujemy również do zapisów ułamkowych)
+• ^ potęgowanie
+</p>
+<h4>Dozwolone funkcje i stałe<h4>
+<p>
+• e – stała Eulera
+• p – liczba Pi
+• x – zmienna
+• sin() - funkcja sinus
+• cos() - funkcja cosinus
+• tan() - funkcja tangens
+• ctg() - funkcja costanges
+• sqr() - funkcja pierwiastak
+</p>
+<p>
+Możliwe jest zagnieżdżanie funkcji.Przykład użycia
+Do zaprezentowania działania programu posłużymy się nastepująca funkcją :
+f(x) = sin(3x)+cos(2x)+sin(7x)+2. W celu otrzymania wyresu wprowadzamy formułe i
+wciskamy przycisk „ Draw”.
+</p>
