@@ -38,7 +38,7 @@ public class PopupLabel extends JLabel{
 
 	
 	protected void openFile(){
-		setFile(new File(getPath()));
+		setFile(new File(getClass().getClassLoader().getResource(getPath()).getPath()));
 		try {
 			setStream((new BufferedReader(new FileReader(getFile()))));
 		} catch (FileNotFoundException e) {
