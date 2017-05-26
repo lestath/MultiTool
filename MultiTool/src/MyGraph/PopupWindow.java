@@ -18,6 +18,7 @@ JLabel screen;
 	 setScreen(screen);
 	 this.setLayout(fl);
 	 this.add(getScreen());
+	 this.setLocationRelativeTo(null);
 	 setResizable(false);
 	 setVisible(true);
  }

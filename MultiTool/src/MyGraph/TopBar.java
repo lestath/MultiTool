@@ -96,7 +96,7 @@ public class TopBar extends JMenuBar implements ActionListener {
 				   new Runnable(){
 					    @Override
 					    public void run(){
-					    	PopupLabel pl = new PopupLabel("res/helpfile");
+					    	PopupLabel pl = new PopupLabel("helpfile");
 							new PopupWindow(pl,"Multitool2.0 - help",new Dimension(800,800));
 						}
 					   }
@@ -108,7 +108,7 @@ public class TopBar extends JMenuBar implements ActionListener {
 				   new Runnable(){
 					    @Override
 					    public void run(){
-					    	PopupLabel pl = new PopupLabel("res/aboutfile");
+					    	PopupLabel pl = new PopupLabel("aboutfile");
 							new PopupWindow(pl,"Multitool2.0 - about",new Dimension(400,250));
 						}
 					   }

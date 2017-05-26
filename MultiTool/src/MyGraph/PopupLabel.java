@@ -6,12 +6,14 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import javax.swing.JLabel;
 
 public class PopupLabel extends JLabel{
 	String path;
-	File file;
+	InputStream file;
 	BufferedReader stream;
 	
 	
@@ -20,11 +22,11 @@ public class PopupLabel extends JLabel{
 		makeContent();
 	}
 
-	public File getFile() {
+	public InputStream getFile() {
 		return file;
 	}
 
-	public void setTFile(File text) {
+	public void setTFile(InputStream text) {
 		this.file = text;
 	}
 	
@@ -38,13 +40,13 @@ public class PopupLabel extends JLabel{
 
 	
 	protected void openFile(){
-		setFile(new File(getClass().getClassLoader().getResource(getPath()).getPath()));
 		try {
-			setStream((new BufferedReader(new FileReader(getFile()))));
-		} catch (FileNotFoundException e) {
+			setFile(getClass().getClassLoader().getResource(getPath()).openStream());
+		} catch (IOException e1) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			e1.printStackTrace();
 		}
+		setStream(new BufferedReader(new InputStreamReader(getFile())));
 	}
 	
 	
@@ -86,8 +88,8 @@ public class PopupLabel extends JLabel{
 		this.stream = bufferedReader;
 	}
 
-	public void setFile(File file) {
-		this.file = file;
+	public void setFile(InputStream inputStream) {
+		this.file = inputStream;
 	}
 
 
